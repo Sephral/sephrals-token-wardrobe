@@ -112,6 +112,6 @@ With the GM’s consent only the active GM’s browser counts, and it sends at m
 * on how many of the last 30 days the module was used
 * how often outfits are put on (in total, through the token HUD, through a key and by the automation), how often the sheet palette and the window are opened, and how often outfits are added, uploaded, copied, imported from a folder, found as variants or taken from wildcard images, how often the quick start and the automation dialog are used
 * the settings *Look*, *Button on the sheet portrait*, *Button in the token HUD*, *Players put outfits on*, *Players manage the wardrobe*, *Linked tokens on all scenes*, *Change of the token image* and *Automatic outfits* (only the chosen option)
-* where errors occur in the module code: file, line and error type, never the error message
+* where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, notes, pictures or other content of the world are sent.
