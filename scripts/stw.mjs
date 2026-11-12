@@ -4,6 +4,7 @@ import {registerDebug} from "./debug.mjs";
 import {saveDebugFile} from "./debug-file.mjs";
 import {onCloseTokenHUD, onRenderTokenHUD, refreshTokenHUD} from "./hud.mjs";
 import {registerHubModule} from "./hub.mjs";
+import {onRenderSceneConfig, registerBehavior, registerPlaces} from "./places.mjs";
 import {applyModuleLanguage} from "./language.mjs";
 import {baseOf, getOutfits, currentOutfitId, defaultTarget, resolveTarget, wearableOutfits} from "./store.mjs";
 import {closePopup} from "./palette.mjs";
@@ -11,6 +12,9 @@ import {startRelay, syncPending} from "./relay.mjs";
 import {noticeNewVersions, runSelfTest} from "./selftest.mjs";
 import {changeLanguage, registerSettings} from "./settings.mjs";
 import {onActorContextOptions, onRenderActorSheet, onSheetHeaderButtons, onSheetHeaderControls} from "./sheet.mjs";
+import {openStageControls} from "./stage-app.mjs";
+import {addToStage, flipSide, getStage, hideStage, removeFromStage, renderStage, setBackdrop,
+  setExpression, setSpeaker, showStage, startStage} from "./stage.mjs";
 import {registerUsage} from "./usage.mjs";
 import {openWardrobe, refreshWardrobes} from "./wardrobe-app.mjs";
 import {step, stepSelected, syncLinkedTokens, wear} from "./wear.mjs";
@@ -23,6 +27,7 @@ function redraw() {
   closePopup();
   refreshWardrobes();
   refreshTokenHUD();
+  renderStage();
   for ( const app of foundry.applications.instances.values() ) {
     if ( app.document?.documentName === "Actor" && app.rendered ) app.render();
   }
@@ -43,13 +48,17 @@ Hooks.once("init", () => {
   registerSettings({
     language: value => changeLanguage(value, redraw),
     redraw,
-    openWardrobe: openForSelection
+    openWardrobe: openForSelection,
+    openStage: () => openStageControls(),
+    stage: () => renderStage()
   });
+  registerBehavior();
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
     features: ["worn", "hudWear", "sheetPalette", "windowOpened", "outfitsAdded", "uploaded", "copied", "folderImport",
-      "suggest", "wildcard", "quickStart", "autoSet", "autoWorn", "keyStep"],
-    settings: ["theme", "sheetButton", "hudButton", "playersWear", "playersEdit", "allScenes", "transition", "automation"]
+      "suggest", "wildcard", "quickStart", "autoSet", "autoWorn", "keyStep", "stageShown", "stageExpression", "placeWorn"],
+    settings: ["theme", "sheetButton", "hudButton", "playersWear", "playersEdit", "allScenes", "transition", "automation",
+      "stageBackdrop", "stageWear", "stageShow", "stageScale"]
   });
   registerKeys();
   registerDebug();
@@ -58,6 +67,8 @@ Hooks.once("init", () => {
   Hooks.on("getHeaderControlsActorSheetV2", onSheetHeaderControls);
   Hooks.on("getActorSheetHeaderButtons", onSheetHeaderButtons);
   Hooks.on("getActorContextOptions", onActorContextOptions);
+  Hooks.on("renderSceneConfig", onRenderSceneConfig);
+  Hooks.on("refreshToken", onRefreshToken);
   Hooks.on("renderTokenHUD", onRenderTokenHUD);
   Hooks.on("closeTokenHUD", onCloseTokenHUD);
   for ( const event of ["updateActor", "updateToken", "createToken", "deleteToken"] ) {
@@ -90,12 +101,43 @@ Hooks.once("init", () => {
       const id = currentOutfitId(resolved.token ?? resolved.actor);
       return wearableOutfits(resolved.base).find(o => o.id === id) ?? null;
     },
+    /**
+     * The conversation stage (GM): portraits big on every screen.
+     * `show(actors, options)` brings characters on (options: replace, speaker, backdrop, open), `add(actor, options)`
+     * adds one (options: outfit, side, speaking), `remove(actor)`, `hide()` closes the stage for all,
+     * `setExpression(actor, outfit)` shows an outfit by id, name, position or mood such as "angry",
+     * `speak(actor)` marks the speaker (null for nobody), `open()` opens the controls, `state()` is a copy of the stage.
+     */
+    stage: {
+      show: showStage,
+      add: addToStage,
+      remove: removeFromStage,
+      hide: hideStage,
+      setExpression,
+      speak: target => setSpeaker(target ?? null),
+      flip: flipSide,
+      backdrop: setBackdrop,
+      open: openStageControls,
+      state: () => foundry.utils.deepClone(getStage())
+    },
     /** Check the module (GM). */
     runSelfTest,
     /** Save the debug file of Sephral's modules (GM). */
     saveDebugFile: messageId => saveDebugFile(messageId ?? null, {moduleId: MODULE_ID})
   };
 });
+
+/**
+ * Hook "refreshToken": the GM sees the real name behind a disguise next to the name the players see.
+ * @param {Token} token
+ * @param {object} flags
+ */
+function onRefreshToken(token, flags) {
+  if ( !game.user.isGM || !token.nameplate || !(flags?.refreshNameplate || flags?.refreshState || flags?.redraw) ) return;
+  const real = token.document.getFlag(MODULE_ID, "realName");
+  if ( !real || (real === token.document.name) ) return;
+  token.nameplate.text = `${token.document.name} (${real})`;
+}
 
 /** Applying a fixed module language loads its file; the rest of "ready" waits for it. */
 let languageReady = Promise.resolve();
@@ -117,6 +159,8 @@ Hooks.once("ready", async () => {
     if ( doc.key === "core.permissions" ) refreshWardrobes();
   });
   registerAutomation();
+  registerPlaces();
+  startStage();
   noticeNewVersions();
 });
 
@@ -135,6 +179,24 @@ function registerKeys() {
       }
     });
   }
+  game.keybindings.register(MODULE_ID, "openStage", {
+    name: "STW.Keys.openStage",
+    editable: [],
+    restricted: true,
+    onDown: () => {
+      openStageControls();
+      return true;
+    }
+  });
+  game.keybindings.register(MODULE_ID, "closeStage", {
+    name: "STW.Keys.closeStage",
+    editable: [],
+    restricted: true,
+    onDown: () => {
+      hideStage();
+      return true;
+    }
+  });
   game.keybindings.register(MODULE_ID, "openWardrobe", {
     name: "STW.Keys.openWardrobe",
     editable: [],

@@ -24,6 +24,28 @@ export function makeId() {
 }
 
 /**
+ * An update entry which deletes a flag of this module. Foundry 14 wants its deletion marker, Foundry 13 only knows the
+ * "-=" syntax, which Foundry 14 reports as deprecated.
+ * @param {string} path     The path below the flags of this module, such as "realName" or "placeBack.abc"
+ * @returns {Record<string, *>}
+ */
+export function flagDeletion(path) {
+  if ( globalThis._del !== undefined ) return {[`flags.${MODULE_ID}.${path}`]: globalThis._del};
+  const parts = path.split(".");
+  const last = parts.pop();
+  return {[`flags.${MODULE_ID}.${[...parts, `-=${last}`].join(".")}`]: null};
+}
+
+/**
+ * Is a value the deletion marker of Foundry 14?
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function isDeletion(value) {
+  return (globalThis._del !== undefined) && (value === globalThis._del);
+}
+
+/**
  * Read a setting of this module.
  * @param {string} key
  * @returns {*}

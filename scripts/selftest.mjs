@@ -3,7 +3,10 @@
  */
 
 import {MODULE_ID, SOCKET, TESTED_VERSIONS, esc, makeId, t} from "./config.mjs";
-import {cycleOutfit, outfitsFromFiles, planAuto, textureScale} from "./outfits.mjs";
+import {armorState, cycleOutfit, nameChange, outfitsFromFiles, planAuto, stageName, textureScale} from "./outfits.mjs";
+import {BEHAVIOR_TYPE} from "./places.mjs";
+import {layoutStage, normalizeStage, planEnter, planLeave, stageMetrics} from "./stage-logic.mjs";
+import {getStage} from "./stage.mjs";
 
 /**
  * Run all checks.
@@ -30,7 +33,8 @@ async function checkAll() {
   check(Array.isArray(CONFIG.statusEffects), "STW.SELFTEST.Status");
   check((typeof game.socket?.emit === "function") && !!SOCKET && !!game.modules.get(MODULE_ID)?.socket, "STW.SELFTEST.Socket");
   check("activeGM" in game.users, "STW.SELFTEST.ActiveGM");
-  for ( const key of ["playersWear", "playersEdit", "allScenes", "transition", "automation", "sheetButton", "hudButton"] ) {
+  for ( const key of ["playersWear", "playersEdit", "allScenes", "transition", "automation", "sheetButton", "hudButton",
+    "stageBackdrop", "stageWear", "stageShow", "stageScale", "stage"] ) {
     check(game.settings.settings.has(`${MODULE_ID}.${key}`), "STW.SELFTEST.Storage", {key});
   }
   const files = outfitsFromFiles(["a/x-token.webp", "a/x-portrait.webp"], {makeId});
@@ -39,13 +43,28 @@ async function checkAll() {
     {inCombat: true, hpPercent: 100, statuses: []}, {manual: null, current: null, autoId: null});
   check((files.length === 1) && (files[0].token === "a/x-token.webp") && (cycleOutfit(list, list[0].id, 1) === list[1].id)
     && auto.change && (textureScale({scale: 2, mirror: false}, {scaleX: 1, scaleY: 1}, null).scaleX === 2), "STW.SELFTEST.Logic");
+  // The conversation stage, the disguises and the places
+  const layout = layoutStage([{id: "a", side: null}, {id: "b", side: null}, {id: "c", side: "right"}, {id: "d", side: "right"}]);
+  const metrics = stageMetrics({width: 1280, height: 720, left: 2, right: 1});
+  check((layout[0].side === "left") && (layout[1].side === "left") && (layout[2].pos === 0) && (layout[3].pos === 1)
+    && (metrics.w > 0) && (metrics.h > 0) && normalizeStage({}, makeId).slots.length === 0, "STW.SELFTEST.StageLogic");
+  check((nameChange("Gruk", null, "Baron").real === "Gruk") && (nameChange("Baron", "Gruk", "").name === "Gruk")
+    && (stageName("Gruk", {disguise: "Baron"}, null) === "Baron"), "STW.SELFTEST.Disguise");
+  check(planEnter({current: "a", wanted: "b", restore: true, stored: false}).remember && (planLeave({stored: "a", current: "b", known: "a"}).wear === "a")
+    && armorState([]).has("none"), "STW.SELFTEST.PlaceLogic");
+  const stageStored = game.settings.get(MODULE_ID, "stage");
+  check(!!stageStored && (typeof stageStored === "object") && Array.isArray(getStage().slots), "STW.SELFTEST.Stage");
+  check(!!foundry.data?.regionBehaviors?.RegionBehaviorType && !!CONFIG.RegionBehavior?.dataModels?.[BEHAVIOR_TYPE], "STW.SELFTEST.Behavior");
+  check(typeof ResizeObserver === "function" && !!document.getElementById("interface"),
+    "STW.SELFTEST.StageScreen");
+  check(typeof foundry.canvas?.placeables?.Token?.prototype?._refreshNameplate === "function", "STW.SELFTEST.Nameplate");
   const broken = game.actors.filter(actor => {
     const stored = actor.getFlag(MODULE_ID, "outfits");
     return (stored !== undefined) && !Array.isArray(stored);
   }).map(actor => actor.name);
   check(!broken.length, "STW.SELFTEST.Broken", {names: broken.join(", ")});
   const keys = ["STW.gear", "STW.SELFTEST.Title", "STW.Window.title", "STW.Sheet.button", "STW.HUD.button",
-    "STW.Quick.street", "STW.Card.wear", "STW.Auto.title", "STW.Notify.noRight"];
+    "STW.Quick.street", "STW.Card.wear", "STW.Auto.title", "STW.Notify.noRight", "STW.Stage.title", "STW.Scene.title", "STW.BEHAVIOR.label"];
   const missing = keys.filter(key => !game.i18n.has(key));
   check(!missing.length, "STW.SELFTEST.Texts", {keys: missing.join(", ")});
   return {problems, checks};

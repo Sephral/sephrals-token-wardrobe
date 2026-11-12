@@ -1,0 +1,77 @@
+<div class="stw-shell">
+  <header class="stw-head">
+    <div class="stw-who">
+      <span class="stw-who-img stw-stage-icon{{#if active}} live{{/if}}"><i class="fa-solid fa-masks-theater" inert></i></span>
+      <div class="stw-who-text">
+        <strong>{{localize "STW.Stage.title"}}</strong>
+        <small>{{subtitle}}</small>
+      </div>
+    </div>
+    <div class="stw-toolbar">
+      <label class="stw-inline" data-tooltip="{{localize "STW.Stage.backdropHint"}}">{{localize "STW.Stage.backdropLabel"}}
+        <select name="backdrop">{{#each backdrops}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <button type="button" class="stw-danger" data-action="closeStage" {{#unless active}}disabled{{/unless}}
+        data-tooltip="{{localize "STW.Stage.closeHint"}}"><i class="fa-solid fa-circle-xmark" inert></i> {{localize "STW.Stage.close"}}</button>
+    </div>
+  </header>
+
+  <section class="stw-stage-add">
+    <select name="addActor" aria-label="{{localize "STW.Stage.pick"}}" {{#if full}}disabled{{/if}}>
+      <option value="">{{localize "STW.Stage.pick"}}</option>
+      {{#if withOutfits.length}}<optgroup label="{{localize "STW.Stage.withOutfits"}}">
+        {{#each withOutfits}}<option value="{{id}}">{{name}}</option>{{/each}}</optgroup>{{/if}}
+      {{#if others.length}}<optgroup label="{{localize "STW.Stage.others"}}">
+        {{#each others}}<option value="{{id}}">{{name}}</option>{{/each}}</optgroup>{{/if}}
+    </select>
+    <button type="button" class="stw-primary" data-action="addActor" {{#if full}}disabled{{/if}}><i class="fa-solid fa-user-plus" inert></i> {{localize "STW.Stage.add"}}</button>
+    <button type="button" data-action="addSelected" {{#unless hasTokens}}disabled{{/unless}}
+      data-tooltip="{{localize "STW.Stage.addSelectedHint"}}"><i class="fa-solid fa-user-group" inert></i> {{localize "STW.Stage.addSelected"}}</button>
+  </section>
+
+  {{#if empty}}
+  <section class="stw-start">
+    <i class="fa-solid fa-masks-theater stw-start-icon" inert></i>
+    <h3>{{localize "STW.Stage.emptyTitle"}}</h3>
+    <p>{{localize "STW.Stage.emptyText"}}</p>
+  </section>
+  {{else}}
+  <div class="stw-stage-slots">
+    {{#each slots}}
+    <article class="stw-stagecard{{#if selected}} selected{{/if}}{{#if speaking}} speaking{{/if}}" data-slot-id="{{id}}" data-action="select">
+      <div class="stw-stagecard-top">
+        <div class="stw-stagecard-img">{{{imgHTML}}}</div>
+        <div class="stw-stagecard-text">
+          <strong>{{name}}</strong>
+          {{#if real}}<small>{{real}}</small>{{/if}}
+          <small class="stw-stagecard-expr">{{#if exprLabel}}{{exprLabel}}{{else}}{{sideLabel}}{{/if}}</small>
+        </div>
+        <div class="stw-stagecard-tools">
+          <button type="button" class="stw-icon{{#if speaking}} on{{/if}}" data-action="speak"
+            data-tooltip="{{localize "STW.Stage.speak"}}" aria-label="{{localize "STW.Stage.speak"}}" aria-pressed="{{#if speaking}}true{{else}}false{{/if}}"><i class="fa-solid fa-comment-dots" inert></i></button>
+          <button type="button" class="stw-icon" data-action="flip"
+            data-tooltip="{{localize "STW.Stage.flip"}} ({{sideLabel}})" aria-label="{{localize "STW.Stage.flip"}}"><i class="fa-solid fa-right-left" inert></i></button>
+          <button type="button" class="stw-icon" data-action="remove"
+            data-tooltip="{{localize "STW.Stage.remove"}}" aria-label="{{localize "STW.Stage.remove"}}"><i class="fa-solid fa-xmark" inert></i></button>
+        </div>
+      </div>
+      {{#if noOutfits}}
+      <p class="stw-stage-hint">{{localize "STW.Stage.noOutfits"}}</p>
+      {{else}}
+      <div class="stw-outfit-strip">
+        {{#each outfits}}
+        <button type="button" class="stw-pick{{#if active}} active{{/if}}" data-action="express" data-outfit-id="{{id}}"
+          data-tooltip="{{label}}{{#if mood}} ({{mood}}){{/if}}{{#if disguise}} / {{disguise}}{{/if}}">
+          <span class="stw-pick-img">{{{thumb}}}</span>
+          <span class="stw-pick-label">{{#if icon}}<i class="fa-solid {{icon}}" inert></i> {{/if}}{{label}}</span>
+          {{#if key}}<kbd>{{key}}</kbd>{{/if}}
+        </button>
+        {{/each}}
+      </div>
+      {{/if}}
+    </article>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  <footer class="stw-foot"><i class="fa-regular fa-keyboard" inert></i> {{localize "STW.Stage.keys"}}</footer>
+</div>

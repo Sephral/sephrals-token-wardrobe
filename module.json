@@ -1,8 +1,8 @@
 {
   "id": "sephrals-token-wardrobe",
   "title": "Sephral’s Token Wardrobe",
-  "description": "A wardrobe for every character: street clothes, battle gear or formal wear, each with its portrait and token image, switched with one click from the sheet or the token.",
-  "version": "1.0.0",
+  "description": "A wardrobe for every character: street clothes, battle gear or formal wear, each with its portrait and token image, switched with one click from the sheet or the token. Also a conversation stage for big portraits, disguises with their own name and outfits that follow the place.",
+  "version": "1.0.1",
   "compatibility": {
     "minimum": 13,
     "verified": "14.370"
@@ -32,5 +32,10 @@
       "path": "lang/de.json"
     }
   ],
-  "socket": true
+  "socket": true,
+  "documentTypes": {
+    "RegionBehavior": {
+      "putOn": {}
+    }
+  }
 }

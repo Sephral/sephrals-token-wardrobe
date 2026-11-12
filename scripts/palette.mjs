@@ -48,6 +48,7 @@ export function paletteHTML(target) {
   const tool = (action, icon, label) => `<button type="button" class="stw-tool" data-stw="${action}"
     data-tooltip="${esc(label)}" aria-label="${esc(label)}"><i class="${icon}" inert></i></button>`;
   const head = `<div class="stw-palette-head"><span class="stw-palette-title">${esc(actor.name)}</span>${
+    (game.user.isGM && outfits.length) ? tool("stage", "fa-solid fa-masks-theater", t("STW.Palette.stage")) : ""}${
     (editable || wearable) ? tool("open", "fa-solid fa-shirt", t("STW.Palette.open")) : ""}</div>`;
   if ( !outfits.length ) {
     return `${head}<p class="stw-empty">${esc(t(editable ? "STW.Palette.emptyEdit" : "STW.Palette.empty"))}</p>`;
@@ -83,9 +84,10 @@ export function createPalette(target, extra="", theme=setting("theme")) {
  * @param {object} handlers
  * @param {(outfitId: string) => void} handlers.wear
  * @param {() => void} handlers.open
+ * @param {() => void} [handlers.stage]
  * @returns {{close: () => void, element: HTMLElement}}
  */
-export function openPopup(anchor, target, {wear, open}) {
+export function openPopup(anchor, target, {wear, open, stage}) {
   closePopup();
   const element = createPalette(target, "stw-popup");
   document.body.append(element);
@@ -125,6 +127,7 @@ export function openPopup(anchor, target, {wear, open}) {
     close();
     if ( button.dataset.stw === "wear" ) wear(button.dataset.outfitId);
     else if ( button.dataset.stw === "open" ) open();
+    else if ( button.dataset.stw === "stage" ) stage?.();
   });
   popup = {close, element};
   return popup;

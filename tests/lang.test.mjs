@@ -59,7 +59,8 @@ test("every key used by scripts and templates exists", async () => {
     used.add(`STW.SETTINGS.${key}.name`);
     used.add(`STW.SETTINGS.${key}.hint`);
   }
-  for ( const key of used ) if ( key.endsWith(".") ) used.delete(key);
+  // Prefixes of Foundry's own text lookup (the Region behavior) name a group, not a text
+  for ( const key of used ) if ( key.endsWith(".") || [...enKeys].some(other => other.startsWith(`${key}.`)) ) used.delete(key);
   const missing = [...used].filter(key => !enKeys.has(key));
   assert.deepEqual(missing, []);
 });

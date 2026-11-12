@@ -3,10 +3,10 @@
  * clicks in order, and a write happens only where something differs.
  */
 
-import {MODULE_ID, setting, t} from "./config.mjs";
+import {MODULE_ID, flagDeletion, isDeletion, setting, t} from "./config.mjs";
 import {trace} from "./debug.mjs";
 import {countFeature} from "./usage.mjs";
-import {cycleOutfit, findOutfit, isVideo, textureScale, usableOutfits} from "./outfits.mjs";
+import {cycleOutfit, findOutfit, isVideo, nameChange, textureScale, usableOutfits} from "./outfits.mjs";
 import {requestSync} from "./relay.mjs";
 import {canWear, currentOutfitId, getOutfits, resolveTarget} from "./store.mjs";
 
@@ -65,7 +65,13 @@ function lookData(source, outfit) {
   data["texture.scaleX"] = scale.scaleX;
   data["texture.scaleY"] = scale.scaleY;
   if ( scale.base ) data[`flags.${MODULE_ID}.base`] = scale.base;
-  else if ( stored ) data[`flags.${MODULE_ID}.-=base`] = null;
+  else if ( stored ) Object.assign(data, flagDeletion("base"));
+  // A disguise puts its name on the token and keeps the real one aside, the next outfit gives it back
+  const real = source.flags?.[MODULE_ID]?.realName ?? null;
+  const named = nameChange(source.name ?? "", real, outfit.disguise);
+  data.name = named.name;
+  if ( named.real ) data[`flags.${MODULE_ID}.realName`] = named.real;
+  else if ( real ) Object.assign(data, flagDeletion("realName"));
   return data;
 }
 
@@ -80,7 +86,7 @@ function onlyChanges(source, data) {
   const same = foundry.utils.equals ?? foundry.utils.objectsEqual;
   const changes = {};
   for ( const [path, value] of Object.entries(data) ) {
-    if ( path.includes("-=") ) {
+    if ( path.includes("-=") || isDeletion(value) ) {
       changes[path] = value;
       continue;
     }
@@ -104,13 +110,13 @@ function prefixed(prefix, data) {
  * The flags a wearing sets on the character: what it has on, and for the automation what was chosen by hand.
  * @param {import("./outfits.mjs").Outfit} outfit
  * @param {object} options
- * @param {string} options.source                  "user" or "auto"
+ * @param {string} options.source                  "user", "place" (a Region or scene asked for it) or "auto"
  * @param {{manual?: (string|null), autoId?: (string|null)}} [options.memory]
  * @returns {Record<string, *>}   Paths relative to the actor
  */
 function flagData(outfit, {source, memory}) {
   const data = {[`flags.${MODULE_ID}.current`]: outfit?.id ?? null};
-  if ( source === "user" ) data[`flags.${MODULE_ID}.manual`] = outfit.id;
+  if ( (source === "user") || (source === "place") ) data[`flags.${MODULE_ID}.manual`] = outfit.id;
   else if ( memory ) {
     if ( "manual" in memory ) data[`flags.${MODULE_ID}.manual`] = memory.manual;
     if ( "autoId" in memory ) data[`flags.${MODULE_ID}.autoId`] = memory.autoId;
@@ -194,7 +200,7 @@ export function syncLinkedTokens(base, outfitId) {
  * @param {Actor|TokenDocument|Token|string} target   An actor, a token or a UUID
  * @param {string|number} ref                         Id, name or position (from 1) of the outfit
  * @param {object} [options]
- * @param {"user"|"auto"} [options.source="user"]     "auto" comes from the automation
+ * @param {"user"|"place"|"auto"} [options.source="user"]   "auto" comes from the automation, "place" from a Region or scene
  * @param {{manual?: (string|null), autoId?: (string|null)}} [options.memory]   Automation bookkeeping, stored along
  * @param {boolean} [options.notify=true]             Tell the user when it cannot be done
  * @returns {Promise<{actor: Actor, token: (TokenDocument|null), outfit: object}|null>}

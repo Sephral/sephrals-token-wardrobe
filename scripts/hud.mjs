@@ -10,6 +10,7 @@ import {MODULE_ID, setting, t} from "./config.mjs";
 import {createPalette, paletteHTML} from "./palette.mjs";
 import {canEdit, canWear, wearableOutfits} from "./store.mjs";
 import {countFeature} from "./usage.mjs";
+import {addToStage} from "./stage.mjs";
 import {openWardrobe} from "./wardrobe-app.mjs";
 import {wear} from "./wear.mjs";
 
@@ -93,6 +94,11 @@ async function onPaletteClick(event, hud, token) {
   if ( target.dataset.stw === "open" ) {
     setOpen(hud, false);
     openWardrobe(token);
+    return;
+  }
+  if ( target.dataset.stw === "stage" ) {
+    setOpen(hud, false);
+    addToStage(token, {open: true});
     return;
   }
   if ( target.dataset.stw !== "wear" ) return;

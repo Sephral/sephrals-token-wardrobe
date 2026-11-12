@@ -12,6 +12,8 @@
  * @property {string} token         Image or video for the token ("" keeps the token image)
  * @property {number|null} scale    Texture scale of the token, null = as it is
  * @property {boolean} mirror       Mirror the token image
+ * @property {string} expression    Mood tag for the conversation stage ("" = none), one of EXPRESSIONS
+ * @property {string} disguise      Name players see on the token and the stage while the outfit is worn ("" = none)
  * @property {OutfitAuto} auto      When the outfit puts itself on
  */
 
@@ -20,7 +22,14 @@
  * @property {boolean} combat       While the character fights (a started combat)
  * @property {number|null} hp       Below this percentage of the hit points, null = off
  * @property {string[]} status      While one of these status effects is active
+ * @property {string[]} armor       While armor of one of these kinds is equipped (ARMOR_TYPES, dnd5e only)
  */
+
+/** The moods an outfit can be tagged with for the conversation stage. */
+export const EXPRESSIONS = ["neutral", "friendly", "happy", "angry", "hurt", "sad", "afraid", "surprised", "mocking"];
+
+/** The kinds of armor an outfit can follow (the dnd5e armor types, "none" = no armor on). */
+export const ARMOR_TYPES = ["none", "light", "medium", "heavy", "shield"];
 
 /** The file extensions of videos. They are only allowed as token image. */
 export const VIDEO_EXTENSIONS = ["webm", "mp4", "m4v", "ogv"];
@@ -123,16 +132,28 @@ function percentOrNull(value) {
 }
 
 /**
+ * A mood tag: one of EXPRESSIONS or "".
+ * @param {*} value
+ * @returns {string}
+ */
+export function normalizeExpression(value) {
+  const key = (typeof value === "string") ? value.trim().toLowerCase() : "";
+  return EXPRESSIONS.includes(key) ? key : "";
+}
+
+/**
  * Bring the automation of an outfit into a known shape.
  * @param {object} [data]
  * @returns {OutfitAuto}
  */
 export function normalizeAuto(data) {
   const status = Array.isArray(data?.status) ? data.status : Object.values(data?.status ?? {});
+  const armor = Array.isArray(data?.armor) ? data.armor : Object.values(data?.armor ?? {});
   return {
     combat: !!data?.combat,
     hp: percentOrNull(data?.hp),
-    status: [...new Set(status.filter(s => (typeof s === "string") && s))]
+    status: [...new Set(status.filter(s => (typeof s === "string") && s))],
+    armor: ARMOR_TYPES.filter(type => armor.includes(type))
   };
 }
 
@@ -143,7 +164,7 @@ export function normalizeAuto(data) {
  */
 export function hasAuto(outfit) {
   const auto = outfit?.auto;
-  return !!auto && (auto.combat || (auto.hp !== null) || (auto.status.length > 0));
+  return !!auto && (auto.combat || (auto.hp !== null) || (auto.status.length > 0) || (auto.armor.length > 0));
 }
 
 /**
@@ -166,6 +187,8 @@ export function normalizeOutfit(data, makeId) {
     token,
     scale: positiveOrNull(data.scale),
     mirror: !!data.mirror,
+    expression: normalizeExpression(data.expression),
+    disguise: text(data.disguise),
     auto: normalizeAuto(data.auto)
   };
 }
@@ -460,7 +483,7 @@ export function barPercent(data) {
 /**
  * Does the state of a character call for an outfit?
  * @param {Outfit} outfit
- * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>}} state
+ * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>, armor?: (Iterable<string>|null)}} state
  * @returns {boolean}
  */
 export function autoMatches(outfit, state) {
@@ -472,7 +495,57 @@ export function autoMatches(outfit, state) {
     const active = new Set(state.statuses);
     if ( auto.status.some(s => active.has(s)) ) return true;
   }
+  if ( auto.armor.length && state.armor ) {
+    const worn = new Set(state.armor);
+    if ( auto.armor.some(type => worn.has(type)) ) return true;
+  }
   return false;
+}
+
+/**
+ * The armor kinds a character has on, from its items. "none" is part of the result when no light, medium or heavy
+ * armor is equipped (a shield does not count as armor here).
+ * @param {{type: string, equipped: boolean, kind: string}[]} items   Equipment items: item type, equipped flag, armor type
+ * @returns {Set<string>}
+ */
+export function armorState(items) {
+  const worn = new Set();
+  for ( const item of items ) {
+    if ( (item.type === "equipment") && item.equipped && ARMOR_TYPES.includes(item.kind) && (item.kind !== "none") ) worn.add(item.kind);
+  }
+  if ( !["light", "medium", "heavy"].some(type => worn.has(type)) ) worn.add("none");
+  return worn;
+}
+
+/* -------------------------------------------- */
+/*  Disguise                                    */
+/* -------------------------------------------- */
+
+/**
+ * The name a token gets when an outfit goes on, and the real name to remember. A disguise keeps the real name aside,
+ * the next outfit without one gives it back.
+ * @param {string} current                 The name of the token now
+ * @param {string|null} stored             The remembered real name, if any
+ * @param {string} disguise                The disguise of the outfit ("" = none)
+ * @returns {{name: string, real: (string|null)}}
+ */
+export function nameChange(current, stored, disguise) {
+  disguise = String(disguise ?? "").trim();
+  if ( disguise ) return {name: disguise, real: stored ?? ((current === disguise) ? null : current)};
+  if ( stored ) return {name: stored, real: null};
+  return {name: current, real: null};
+}
+
+/**
+ * The name shown on the conversation stage: the disguise of the outfit shown, else the disguise of the outfit the
+ * character wears, else the real name.
+ * @param {string} actorName
+ * @param {Outfit|null} shown
+ * @param {Outfit|null} worn
+ * @returns {string}
+ */
+export function stageName(actorName, shown, worn) {
+  return shown?.disguise || worn?.disguise || actorName;
 }
 
 /**
@@ -480,7 +553,7 @@ export function autoMatches(outfit, state) {
  * is unchanged nothing happens, so a manual choice stays until the situation changes. When the situation ends, the
  * outfit the user chose by hand comes back.
  * @param {Outfit[]} outfits
- * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>}} state
+ * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>, armor?: (Iterable<string>|null)}} state
  * @param {{manual: (string|null), current: (string|null), autoId: (string|null)}} memory
  * @returns {{change: false}|{change: true, wear: (string|null), autoId: (string|null), manual: (string|null)}}
  */

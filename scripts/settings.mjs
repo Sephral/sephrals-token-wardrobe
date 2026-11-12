@@ -24,15 +24,22 @@ export const SETTINGS = {
   transition: {type: String, default: "fade", choices: Object.fromEntries(
     ["none", "fade", "swirl", "waterDrop", "morph", "crosshatch", "wind", "waves", "whiteNoise", "hologram", "hole",
       "holeSwirl", "glitch", "dots"].map(key => [key, `STW.SETTINGS.transition.${key}`]))},
-  automation: {type: Boolean, default: true}
+  automation: {type: Boolean, default: true},
+  stageBackdrop: {type: String, default: "soft", choices: {
+    soft: "STW.Stage.backdrop.soft", dark: "STW.Stage.backdrop.dark", none: "STW.Stage.backdrop.none"}},
+  stageWear: {type: Boolean, default: false},
+  stageShow: {type: Boolean, default: true, scope: "client", onChange: "stage"},
+  stageScale: {type: String, default: "normal", scope: "client", onChange: "stage", choices: {
+    small: "STW.SETTINGS.stageScale.small", normal: "STW.SETTINGS.stageScale.normal", large: "STW.SETTINGS.stageScale.large"}}
 };
 
 /**
  * Register all settings of the module and its menus.
- * @param {{language: Function, redraw: Function, openWardrobe: Function}} handlers
+ * @param {{language: Function, redraw: Function, openWardrobe: Function, openStage: Function, stage: Function}} handlers
  */
 export function registerSettings(handlers) {
   openWardrobeMenu = handlers.openWardrobe;
+  openStageMenu = handlers.openStage;
   for ( const [key, def] of Object.entries(SETTINGS) ) {
     game.settings.register(MODULE_ID, key, {
       name: `STW.SETTINGS.${key}.name`,
@@ -46,12 +53,23 @@ export function registerSettings(handlers) {
     });
   }
   game.settings.register(MODULE_ID, "acknowledgedVersions", {scope: "client", config: false, type: String, default: ""});
+  // The conversation stage, written by the GM, read by every client
+  game.settings.register(MODULE_ID, "stage", {scope: "world", config: false, type: Object, default: {},
+    onChange: () => handlers.stage?.()});
   game.settings.registerMenu(MODULE_ID, "wardrobe", {
     name: "STW.Window.menuTitle",
     label: "STW.Window.menuLabel",
     hint: "STW.Window.menuHint",
     icon: "fa-solid fa-shirt",
     type: WardrobeMenu
+  });
+  game.settings.registerMenu(MODULE_ID, "stageMenu", {
+    name: "STW.Stage.menuTitle",
+    label: "STW.Stage.menuLabel",
+    hint: "STW.Stage.menuHint",
+    icon: "fa-solid fa-masks-theater",
+    type: StageMenu,
+    restricted: true
   });
   game.settings.registerMenu(MODULE_ID, "selfTest", {
     name: "STW.SELFTEST.Title",
@@ -66,11 +84,23 @@ export function registerSettings(handlers) {
 /** Opens the wardrobe for the menu button. */
 let openWardrobeMenu = () => {};
 
+/** Opens the stage controls for the menu button. */
+let openStageMenu = () => {};
+
 /** The menu button which opens the wardrobe of the selected token or of the user's character. */
 class WardrobeMenu extends foundry.applications.api.ApplicationV2 {
   /** @override */
   async render() {
     await openWardrobeMenu();
+    return this;
+  }
+}
+
+/** The menu button which opens the controls of the conversation stage (GM). */
+class StageMenu extends foundry.applications.api.ApplicationV2 {
+  /** @override */
+  async render() {
+    await openStageMenu();
     return this;
   }
 }

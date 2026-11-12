@@ -57,6 +57,25 @@
       "automation": {
         "name": "Automatic outfits",
         "hint": "Outfits with an automation put themselves on at the start of a fight, below a share of hit points or while a status is active. Only the active GM runs the rules."
+      },
+      "stageBackdrop": {
+        "name": "Backdrop of the conversation stage",
+        "hint": "How the screen looks behind the portraits when the GM opens a stage. The GM can change it for the running stage."
+      },
+      "stageWear": {
+        "name": "Stage expressions put the outfit on",
+        "hint": "Off: switching an expression on the stage only changes the stage. On: the character also puts that outfit on, with portrait and token."
+      },
+      "stageShow": {
+        "name": "Show the conversation stage",
+        "hint": "Show the portraits of a conversation on this device. This device only."
+      },
+      "stageScale": {
+        "name": "Size of the stage portraits",
+        "hint": "Make the portraits of the conversation stage smaller or bigger on this device.",
+        "small": "Small",
+        "normal": "Normal",
+        "large": "Large"
       }
     },
     "gear": "Settings",
@@ -81,7 +100,14 @@
       "ActiveGM": "Foundry does not name the active GM.",
       "Storage": "The setting {key} is missing.",
       "Logic": "The rules for file names, scale and automation do not work.",
-      "Broken": "Characters with a damaged wardrobe: {names}"
+      "Broken": "Characters with a damaged wardrobe: {names}",
+      "StageLogic": "The rules for the layout of the conversation stage do not work.",
+      "Disguise": "The rules for disguises do not work.",
+      "PlaceLogic": "The rules for outfits by place do not work.",
+      "Stage": "The setting of the conversation stage is missing.",
+      "Behavior": "The Region behavior Put on outfit is not registered.",
+      "StageScreen": "The screen elements for the conversation stage are missing.",
+      "Nameplate": "Foundry does not draw token names the way the module expects."
     },
     "DEBUG": {
       "Title": "Debug file",
@@ -127,7 +153,10 @@
       "noImages": "No images in {path}.",
       "folderFailed": "The folder {path} could not be read.",
       "wildcardNone": "This token has no wildcard images.",
-      "countOne": "{count} outfit"
+      "countOne": "{count} outfit",
+      "stage": "Stage",
+      "stageHint": "Bring this character onto the conversation stage for all players",
+      "disguised": "Disguised as {name}. The real name is {real}. Players only see {name}."
     },
     "Card": {
       "portrait": "Portrait",
@@ -147,7 +176,11 @@
       "moveRight": "Move down the list",
       "remove": "Remove outfit",
       "removeTitle": "Remove outfit",
-      "removeText": "Remove {name} from the wardrobe? The image files stay."
+      "removeText": "Remove {name} from the wardrobe? The image files stay.",
+      "disguise": "Disguise name",
+      "disguiseHint": "Players see this name on the token and the stage while the outfit is worn. Empty: the real name.",
+      "expression": "Mood",
+      "expressionHint": "Mood of this outfit for the conversation stage"
     },
     "Quick": {
       "street": "Street clothes",
@@ -165,7 +198,16 @@
       "cancel": "Cancel",
       "inCombat": "in a fight",
       "belowHp": "below {percent} percent hit points",
-      "whileStatus": "while {status}"
+      "whileStatus": "while {status}",
+      "whileArmor": "while wearing {armor}",
+      "armor": {
+        "title": "While armor of this kind is on (equipped)",
+        "none": "No armor",
+        "light": "Light armor",
+        "medium": "Medium armor",
+        "heavy": "Heavy armor",
+        "shield": "Shield"
+      }
     },
     "Suggest": {
       "title": "Variants for {name}",
@@ -176,7 +218,8 @@
     "Palette": {
       "open": "Open the wardrobe",
       "empty": "No outfits yet.",
-      "emptyEdit": "No outfits yet. Open the wardrobe to make some."
+      "emptyEdit": "No outfits yet. Open the wardrobe to make some.",
+      "stage": "Bring to the conversation stage"
     },
     "Sheet": {
       "button": "Outfits",
@@ -188,7 +231,9 @@
     "Keys": {
       "nextOutfit": "Next outfit of the selected tokens",
       "previousOutfit": "Previous outfit of the selected tokens",
-      "openWardrobe": "Open the wardrobe of the selected token"
+      "openWardrobe": "Open the wardrobe of the selected token",
+      "openStage": "Open the conversation stage",
+      "closeStage": "Close the conversation stage for all"
     },
     "Notify": {
       "noTarget": "No character to dress.",
@@ -197,6 +242,82 @@
       "noOutfit": "{name} has no outfit {outfit}.",
       "noOutfits": "{name} has no outfits to switch between.",
       "videoPortrait": "A video can only be a token image, not a portrait."
+    },
+    "Expression": {
+      "none": "No mood",
+      "neutral": "Neutral",
+      "friendly": "Friendly",
+      "happy": "Happy",
+      "angry": "Angry",
+      "hurt": "Hurt",
+      "sad": "Sad",
+      "afraid": "Afraid",
+      "surprised": "Surprised",
+      "mocking": "Mocking"
+    },
+    "Stage": {
+      "title": "Conversation stage",
+      "menuTitle": "Conversation stage",
+      "menuLabel": "Open the stage",
+      "menuHint": "Opens the controls of the conversation stage (GM).",
+      "entry": "Bring to the conversation stage",
+      "gmOnly": "Only a GM can run the conversation stage.",
+      "full": "The stage has room for {max} portraits.",
+      "noImage": "{name} has no picture for the stage.",
+      "realName": "Real name: {name}",
+      "onStage": "On stage for everyone: {count}",
+      "offStage": "The stage is closed",
+      "side": {
+        "left": "Left",
+        "right": "Right"
+      },
+      "backdropLabel": "Backdrop",
+      "backdropHint": "The look of the screen behind the portraits",
+      "backdrop": {
+        "soft": "Soft",
+        "dark": "Dark",
+        "none": "None"
+      },
+      "close": "Close stage",
+      "closeHint": "Remove all portraits and close the stage on every screen",
+      "pick": "Choose a character",
+      "withOutfits": "With outfits",
+      "others": "Other characters",
+      "add": "Add",
+      "addSelected": "Selected tokens",
+      "addSelectedHint": "Bring the characters of the selected tokens onto the stage",
+      "emptyTitle": "Nobody on stage yet",
+      "emptyText": "Choose a character, drop one here from the sidebar or add the selected tokens. The portraits appear big on every screen. Then click an outfit to change the expression.",
+      "speak": "Speaking",
+      "flip": "Other side",
+      "remove": "Take off the stage",
+      "noOutfits": "This character has no outfits, so the picture of the character stays. Add outfits in the wardrobe to switch expressions.",
+      "keys": "Keys: left and right choose a portrait, up and down or 1 to 9 pick an outfit, S marks the speaker, F changes the side, Delete takes it off the stage."
+    },
+    "BEHAVIOR": {
+      "label": "Put on outfit",
+      "hint": "Tokens which enter this Region put on an outfit from their wardrobe. Only the active GM writes the change.",
+      "FIELDS": {
+        "outfit": {
+          "label": "Outfit",
+          "hint": "The name of the outfit, for example Street clothes. A token whose character has no outfit of that name stays as it is."
+        },
+        "leave": {
+          "label": "On leaving",
+          "hint": "Keep the outfit or put the previous outfit back when the token leaves the Region."
+        }
+      },
+      "leave": {
+        "keep": "Keep the outfit",
+        "restore": "Put the previous outfit back"
+      }
+    },
+    "Scene": {
+      "title": "Token Wardrobe",
+      "outfit": "Outfit of this scene",
+      "outfitHint": "The name of an outfit, for example Street clothes. When the scene is activated, the tokens on it put that outfit on. So do tokens which are added while it is active.",
+      "leave": "When the scene ends",
+      "leaveHint": "Keep the outfit or give the tokens their previous outfit back when another scene is activated."
     }
   }
 }

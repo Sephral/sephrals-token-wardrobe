@@ -4,7 +4,7 @@
  * message, so the GM checks the rights of that user, never what the message claims.
  */
 
-import {MODULE_ID, SOCKET, setting} from "./config.mjs";
+import {MODULE_ID, SOCKET, flagDeletion, setting} from "./config.mjs";
 import {trace} from "./debug.mjs";
 import {canWear, isActiveGM} from "./store.mjs";
 
@@ -56,7 +56,7 @@ export async function syncPending(onSync) {
     if ( !outfitId ) continue;
     try {
       await onSync(actor, outfitId);
-      await actor.update({[`flags.${MODULE_ID}.-=sync`]: null});
+      await actor.update(flagDeletion("sync"));
       trace.add("pending sync done", {actor: actor.name});
     } catch(err) {
       console.error(`${MODULE_ID} | Could not complete the waiting outfit of ${actor.name}`, err);

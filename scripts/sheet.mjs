@@ -7,6 +7,7 @@
 import {MODULE_ID, setting, t} from "./config.mjs";
 import {openPopup} from "./palette.mjs";
 import {canEdit, canWear, getOutfits, resolveTarget, wearableOutfits} from "./store.mjs";
+import {addToStage} from "./stage.mjs";
 import {countFeature} from "./usage.mjs";
 import {openWardrobe} from "./wardrobe-app.mjs";
 import {wear} from "./wear.mjs";
@@ -81,7 +82,8 @@ export function onRenderActorSheet(app, html) {
     const target = sheetTarget(actor);
     openPopup(button, target, {
       wear: id => wear(target, id),
-      open: () => openWardrobe(target)
+      open: () => openWardrobe(target),
+      stage: () => addToStage(target, {open: true})
     });
   });
   host.append(button);
@@ -144,6 +146,21 @@ export function onActorContextOptions(app, entries) {
     visible,
     callback: open,
     onClick: (event, li) => open(li)
+  });
+  // The GM brings a character onto the conversation stage
+  const onStage = li => {
+    const actor = actorOf(li);
+    if ( actor ) addToStage(actor, {open: true});
+  };
+  const stageVisible = li => game.user.isGM && !!actorOf(li);
+  entries.push({
+    name: "STW.Stage.entry",
+    label: "STW.Stage.entry",
+    icon: '<i class="fa-solid fa-masks-theater"></i>',
+    condition: stageVisible,
+    visible: stageVisible,
+    callback: onStage,
+    onClick: (event, li) => onStage(li)
   });
 }
 

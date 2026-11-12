@@ -3,13 +3,30 @@
  * a click to put an outfit on, images dropped in from the desktop, the file browser, other characters or folders.
  */
 
-import {MODULE_ID, TEMPLATES, addSettingsGear, esc, makeId, setting, t} from "./config.mjs";
+import {MODULE_ID, TEMPLATES, addSettingsGear, esc, flagDeletion, makeId, setting, t} from "./config.mjs";
 import {mediaHTML} from "./palette.mjs";
-import {alternateFiles, fileStem, hasAuto, isVideo, normalizeAuto, outfitsFromFiles, quickStartOutfits, uniqueNames,
-  usableOutfits, withoutQuery} from "./outfits.mjs";
+import {ARMOR_TYPES, EXPRESSIONS, alternateFiles, fileStem, hasAuto, isVideo, normalizeAuto, normalizeExpression, outfitsFromFiles,
+  quickStartOutfits, uniqueNames, usableOutfits, withoutQuery} from "./outfits.mjs";
 import {baseOf, canEdit, canWear, currentOutfitId, fileRights, getOutfits, resolveTarget, saveOutfits} from "./store.mjs";
+import {addToStage} from "./stage.mjs";
 import {countFeature} from "./usage.mjs";
 import {wear} from "./wear.mjs";
+
+/** The icons of the moods, shared with the stage window. */
+export const EXPRESSION_ICONS = {
+  neutral: "fa-face-meh", friendly: "fa-face-smile", happy: "fa-face-laugh-beam", angry: "fa-face-angry",
+  hurt: "fa-bandage", sad: "fa-face-frown", afraid: "fa-face-grimace", surprised: "fa-face-surprise",
+  mocking: "fa-face-rolling-eyes"
+};
+
+/**
+ * The name of a mood in the language of the user.
+ * @param {string} key
+ * @returns {string}
+ */
+export function expressionName(key) {
+  return key ? t(`STW.Expression.${key}`) : t("STW.Expression.none");
+}
 
 const {ApplicationV2, HandlebarsApplicationMixin, DialogV2} = foundry.applications.api;
 
@@ -165,7 +182,8 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
       suggest: WardrobeApp.#onSuggest,
       wildcard: WardrobeApp.#onWildcard,
       newOutfit: WardrobeApp.#onNew,
-      quickStart: WardrobeApp.#onQuickStart
+      quickStart: WardrobeApp.#onQuickStart,
+      stage: WardrobeApp.#onStage
     }
   };
 
@@ -197,7 +215,11 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
     else if ( editable && !rights.browse ) notices.push(t("STW.Window.noBrowse"));
     const count = outfits.length;
     const wildcard = this.base.prototypeToken.randomImg;
+    const worn = outfits.find(o => o.id === current);
+    if ( game.user.isGM && worn?.disguise ) notices.push(t("STW.Window.disguised", {name: worn.disguise, real: this.base.name}));
+    const moods = ["", ...EXPRESSIONS];
     return {
+      canStage: game.user.isGM && !!usableOutfits(outfits).length,
       name: actor.name,
       whoImage: mediaHTML(actor.img),
       subtitle: this.token ? t("STW.Window.unlinked") : t((usableOutfits(outfits).length === 1) ? "STW.Window.countOne" : "STW.Window.count", {count: usableOutfits(outfits).length}),
@@ -218,6 +240,7 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
         current: outfit.id === current,
         hasAuto: hasAuto(outfit),
         autoSummary: autoSummary(outfit),
+        moods: moods.map(value => ({value, label: expressionName(value), selected: value === outfit.expression})),
         portraitHTML: mediaHTML(outfit.portrait),
         tokenHTML: mediaHTML(outfit.token)
       }))
@@ -313,6 +336,8 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if ( name === "label" ) outfit.label = field.value.trim() || outfit.label;
       else if ( name === "scale" ) outfit.scale = field.value === "" ? null : Number(field.value);
       else if ( name === "mirror" ) outfit.mirror = field.checked;
+      else if ( name === "disguise" ) outfit.disguise = field.value.trim();
+      else if ( name === "expression" ) outfit.expression = normalizeExpression(field.value);
     });
   }
 
@@ -571,7 +596,7 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
     });
     if ( !sure ) return;
     const outfits = getOutfits(this.base).filter(o => o.id !== id);
-    const flags = (currentOutfitId(this.actor) === id) ? {[`flags.${MODULE_ID}.-=current`]: null} : {};
+    const flags = (currentOutfitId(this.actor) === id) ? flagDeletion("current") : {};
     await this.#save(outfits, flags);
   }
 
@@ -606,6 +631,14 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
       countFeature(MODULE_ID, "autoSet");
       await this.#change(id, o => { o.auto = auto; });
     }
+  }
+
+  /**
+   * Bring the character onto the conversation stage and open its controls.
+   * @this {WardrobeApp}
+   */
+  static async #onStage() {
+    await addToStage(this.token ?? this.base, {open: true});
   }
 
   /**
@@ -766,6 +799,7 @@ export function autoSummary(outfit) {
   if ( auto.combat ) parts.push(t("STW.Auto.inCombat"));
   if ( auto.hp !== null ) parts.push(t("STW.Auto.belowHp", {percent: auto.hp}));
   if ( auto.status.length ) parts.push(t("STW.Auto.whileStatus", {status: auto.status.map(statusName).join(", ")}));
+  if ( auto.armor.length ) parts.push(t("STW.Auto.whileArmor", {armor: auto.armor.map(a => t(`STW.Auto.armor.${a}`)).join(", ")}));
   return parts.join(", ");
 }
 
@@ -791,11 +825,16 @@ async function editAuto(outfit) {
   const boxes = effects.map(e => `<label class="stw-status"><input type="checkbox" name="status" value="${esc(e.id)}"
     ${auto.status.includes(e.id) ? "checked" : ""}><img src="${esc(e.img ?? e.icon ?? "")}" alt=""><span>${esc(statusName(e.id))}</span></label>`)
     .join("");
+  // Armor types exist in dnd5e only
+  const armorBoxes = (game.system.id === "dnd5e") ? `<p class="stw-auto-title">${esc(t("STW.Auto.armor.title"))}</p>
+    <div class="stw-armor-list">${ARMOR_TYPES.map(type => `<label class="stw-check"><input type="checkbox" name="armor" value="${type}"
+    ${auto.armor.includes(type) ? "checked" : ""}> ${esc(t(`STW.Auto.armor.${type}`))}</label>`).join("")}</div>` : "";
   const content = document.createElement("div");
   content.innerHTML = `<div class="stw-auto-form"><p class="hint">${esc(t("STW.Auto.intro"))}</p>
     <label class="stw-check"><input type="checkbox" name="combat" ${auto.combat ? "checked" : ""}> ${esc(t("STW.Auto.combat"))}</label>
     <label class="stw-check">${esc(t("STW.Auto.hp"))}
       <input type="number" name="hp" min="1" max="100" step="1" value="${auto.hp ?? ""}" placeholder="-"> %</label>
+    ${armorBoxes}
     <p class="stw-auto-title">${esc(t("STW.Auto.status"))}</p>
     <div class="stw-status-list">${boxes}</div>
     <p class="hint">${esc(t("STW.Auto.outro"))}</p></div>`;
@@ -809,7 +848,8 @@ async function editAuto(outfit) {
       callback: (event, button) => normalizeAuto({
         combat: button.form.elements.combat.checked,
         hp: button.form.elements.hp.value,
-        status: Array.from(button.form.querySelectorAll("input[name=status]:checked"), i => i.value)
+        status: Array.from(button.form.querySelectorAll("input[name=status]:checked"), i => i.value),
+        armor: Array.from(button.form.querySelectorAll("input[name=armor]:checked"), i => i.value)
       })
     }, {action: "cancel", label: "STW.Auto.cancel", icon: "fa-solid fa-xmark"}],
     render: (event, dialog) => {

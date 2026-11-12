@@ -57,6 +57,25 @@
       "automation": {
         "name": "Automatische Outfits",
         "hint": "Outfits mit Automatik ziehen sich selbst an: beim Kampfbeginn, unter einem Anteil der Lebenspunkte oder solange ein Zustand aktiv ist. Nur der aktive SL führt die Regeln aus."
+      },
+      "stageBackdrop": {
+        "name": "Hintergrund der Gesprächsbühne",
+        "hint": "So sieht der Bildschirm hinter den Porträts aus, wenn der SL eine Bühne öffnet. Der SL kann ihn für die laufende Bühne ändern."
+      },
+      "stageWear": {
+        "name": "Bühnenausdruck zieht das Outfit an",
+        "hint": "Aus: Ein Ausdruckswechsel auf der Bühne ändert nur die Bühne. An: Die Figur zieht das Outfit auch an, mit Porträt und Token."
+      },
+      "stageShow": {
+        "name": "Gesprächsbühne anzeigen",
+        "hint": "Zeigt die Porträts eines Gesprächs auf diesem Gerät. Gilt nur für dieses Gerät."
+      },
+      "stageScale": {
+        "name": "Größe der Bühnenporträts",
+        "hint": "Macht die Porträts der Gesprächsbühne auf diesem Gerät kleiner oder größer.",
+        "small": "Klein",
+        "normal": "Normal",
+        "large": "Groß"
       }
     },
     "gear": "Einstellungen",
@@ -81,7 +100,14 @@
       "ActiveGM": "Foundry nennt den aktiven SL nicht.",
       "Storage": "Die Einstellung {key} fehlt.",
       "Logic": "Die Regeln für Dateinamen, Größe und Automatik funktionieren nicht.",
-      "Broken": "Figuren mit beschädigtem Kleiderschrank: {names}"
+      "Broken": "Figuren mit beschädigtem Kleiderschrank: {names}",
+      "StageLogic": "Die Regeln für das Layout der Gesprächsbühne funktionieren nicht.",
+      "Disguise": "Die Regeln für Verkleidungen funktionieren nicht.",
+      "PlaceLogic": "Die Regeln für Outfits nach Ort funktionieren nicht.",
+      "Stage": "Die Einstellung der Gesprächsbühne fehlt.",
+      "Behavior": "Das Regionsverhalten Outfit anziehen ist nicht angemeldet.",
+      "StageScreen": "Die Bildschirmelemente für die Gesprächsbühne fehlen.",
+      "Nameplate": "Foundry zeichnet die Tokennamen nicht so, wie das Modul es erwartet."
     },
     "DEBUG": {
       "Title": "Debug-Datei",
@@ -127,7 +153,10 @@
       "noImages": "Keine Bilder in {path}.",
       "folderFailed": "Der Ordner {path} konnte nicht gelesen werden.",
       "wildcardNone": "Dieser Token hat keine Wildcard-Bilder.",
-      "countOne": "{count} Outfit"
+      "countOne": "{count} Outfit",
+      "stage": "Bühne",
+      "stageHint": "Diese Figur für alle Spieler auf die Gesprächsbühne holen",
+      "disguised": "Verkleidet als {name}. Der echte Name ist {real}. Die Spieler sehen nur {name}."
     },
     "Card": {
       "portrait": "Porträt",
@@ -147,7 +176,11 @@
       "moveRight": "In der Liste nach hinten",
       "remove": "Outfit entfernen",
       "removeTitle": "Outfit entfernen",
-      "removeText": "{name} aus dem Kleiderschrank entfernen? Die Bilddateien bleiben."
+      "removeText": "{name} aus dem Kleiderschrank entfernen? Die Bilddateien bleiben.",
+      "disguise": "Verkleidungsname",
+      "disguiseHint": "Die Spieler sehen diesen Namen am Token und auf der Bühne, solange das Outfit getragen wird. Leer: der echte Name.",
+      "expression": "Stimmung",
+      "expressionHint": "Stimmung dieses Outfits für die Gesprächsbühne"
     },
     "Quick": {
       "street": "Straßenkleidung",
@@ -165,7 +198,16 @@
       "cancel": "Abbrechen",
       "inCombat": "im Kampf",
       "belowHp": "unter {percent} Prozent Lebenspunkte",
-      "whileStatus": "solange {status}"
+      "whileStatus": "solange {status}",
+      "whileArmor": "solange {armor} getragen wird",
+      "armor": {
+        "title": "Solange diese Rüstungsart angelegt ist",
+        "none": "Keine Rüstung",
+        "light": "Leichte Rüstung",
+        "medium": "Mittlere Rüstung",
+        "heavy": "Schwere Rüstung",
+        "shield": "Schild"
+      }
     },
     "Suggest": {
       "title": "Varianten für {name}",
@@ -176,7 +218,8 @@
     "Palette": {
       "open": "Kleiderschrank öffnen",
       "empty": "Noch keine Outfits.",
-      "emptyEdit": "Noch keine Outfits. Öffne den Kleiderschrank, um welche anzulegen."
+      "emptyEdit": "Noch keine Outfits. Öffne den Kleiderschrank, um welche anzulegen.",
+      "stage": "Auf die Gesprächsbühne holen"
     },
     "Sheet": {
       "button": "Outfits",
@@ -188,7 +231,9 @@
     "Keys": {
       "nextOutfit": "Nächstes Outfit der gewählten Token",
       "previousOutfit": "Voriges Outfit der gewählten Token",
-      "openWardrobe": "Kleiderschrank des gewählten Tokens öffnen"
+      "openWardrobe": "Kleiderschrank des gewählten Tokens öffnen",
+      "openStage": "Gesprächsbühne öffnen",
+      "closeStage": "Gesprächsbühne für alle schließen"
     },
     "Notify": {
       "noTarget": "Keine Figur zum Anziehen.",
@@ -197,6 +242,82 @@
       "noOutfit": "{name} hat kein Outfit {outfit}.",
       "noOutfits": "{name} hat keine Outfits zum Wechseln.",
       "videoPortrait": "Ein Video kann nur Tokenbild sein, kein Porträt."
+    },
+    "Expression": {
+      "none": "Keine Stimmung",
+      "neutral": "Neutral",
+      "friendly": "Freundlich",
+      "happy": "Fröhlich",
+      "angry": "Wütend",
+      "hurt": "Verletzt",
+      "sad": "Traurig",
+      "afraid": "Ängstlich",
+      "surprised": "Überrascht",
+      "mocking": "Spöttisch"
+    },
+    "Stage": {
+      "title": "Gesprächsbühne",
+      "menuTitle": "Gesprächsbühne",
+      "menuLabel": "Bühne öffnen",
+      "menuHint": "Öffnet die Steuerung der Gesprächsbühne (SL).",
+      "entry": "Auf die Gesprächsbühne holen",
+      "gmOnly": "Nur der SL kann die Gesprächsbühne steuern.",
+      "full": "Auf der Bühne ist Platz für {max} Porträts.",
+      "noImage": "{name} hat kein Bild für die Bühne.",
+      "realName": "Echter Name: {name}",
+      "onStage": "Auf der Bühne für alle: {count}",
+      "offStage": "Die Bühne ist geschlossen",
+      "side": {
+        "left": "Links",
+        "right": "Rechts"
+      },
+      "backdropLabel": "Hintergrund",
+      "backdropHint": "So sieht der Bildschirm hinter den Porträts aus",
+      "backdrop": {
+        "soft": "Sanft",
+        "dark": "Dunkel",
+        "none": "Keiner"
+      },
+      "close": "Bühne schließen",
+      "closeHint": "Alle Porträts entfernen und die Bühne auf allen Bildschirmen schließen",
+      "pick": "Figur wählen",
+      "withOutfits": "Mit Outfits",
+      "others": "Andere Figuren",
+      "add": "Hinzufügen",
+      "addSelected": "Gewählte Token",
+      "addSelectedHint": "Die Figuren der gewählten Token auf die Bühne holen",
+      "emptyTitle": "Noch niemand auf der Bühne",
+      "emptyText": "Wähle eine Figur, zieh eine aus der Seitenleiste hierher oder nimm die gewählten Token. Die Porträts erscheinen groß auf jedem Bildschirm. Dann wechselst du den Ausdruck mit einem Klick auf ein Outfit.",
+      "speak": "Spricht gerade",
+      "flip": "Andere Seite",
+      "remove": "Von der Bühne nehmen",
+      "noOutfits": "Diese Figur hat keine Outfits, deshalb bleibt ihr Bild. Leg im Kleiderschrank Outfits an, um den Ausdruck zu wechseln.",
+      "keys": "Tasten: Links und Rechts wählen ein Porträt, Hoch und Runter oder 1 bis 9 wählen ein Outfit, S markiert, wer spricht, F wechselt die Seite, Entf nimmt es von der Bühne."
+    },
+    "BEHAVIOR": {
+      "label": "Outfit anziehen",
+      "hint": "Token, die diese Region betreten, ziehen ein Outfit aus ihrem Kleiderschrank an. Nur der aktive SL schreibt die Änderung.",
+      "FIELDS": {
+        "outfit": {
+          "label": "Outfit",
+          "hint": "Der Name des Outfits, zum Beispiel Straßenkleidung. Ein Token, dessen Figur kein Outfit mit diesem Namen hat, bleibt wie es ist."
+        },
+        "leave": {
+          "label": "Beim Verlassen",
+          "hint": "Das Outfit behalten oder das vorherige Outfit wieder anziehen, wenn das Token die Region verlässt."
+        }
+      },
+      "leave": {
+        "keep": "Outfit behalten",
+        "restore": "Vorheriges Outfit wieder anziehen"
+      }
+    },
+    "Scene": {
+      "title": "Token Wardrobe",
+      "outfit": "Outfit dieser Szene",
+      "outfitHint": "Der Name eines Outfits, zum Beispiel Straßenkleidung. Wird die Szene aktiviert, ziehen die Token darauf dieses Outfit an. Das tun auch Token, die hinzukommen, solange sie aktiv ist.",
+      "leave": "Wenn die Szene endet",
+      "leaveHint": "Das Outfit behalten oder den Token ihr vorheriges Outfit zurückgeben, wenn eine andere Szene aktiviert wird."
     }
   }
 }

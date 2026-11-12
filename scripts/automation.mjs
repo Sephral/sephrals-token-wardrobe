@@ -7,7 +7,7 @@
 
 import {MODULE_ID, setting} from "./config.mjs";
 import {trace} from "./debug.mjs";
-import {barPercent, hasAuto, planAuto} from "./outfits.mjs";
+import {armorState, barPercent, hasAuto, planAuto} from "./outfits.mjs";
 import {baseOf, getOutfits, isActiveGM} from "./store.mjs";
 import {countFeature} from "./usage.mjs";
 import {wear} from "./wear.mjs";
@@ -57,12 +57,25 @@ function hitPointPercent(actor) {
 }
 
 /**
+ * The armor a character has on. Only dnd5e knows armor types, other systems give null (no rule applies).
+ * @param {Actor} actor
+ * @returns {Set<string>|null}
+ */
+function armorOf(actor) {
+  if ( game.system.id !== "dnd5e" ) return null;
+  const items = actor.items.map(item => ({type: item.type, equipped: !!item.system?.equipped,
+    kind: item.system?.type?.value ?? ""}));
+  return armorState(items);
+}
+
+/**
  * What the rules look at.
  * @param {Actor} actor
- * @returns {{inCombat: boolean, hpPercent: (number|null), statuses: Set<string>}}
+ * @returns {{inCombat: boolean, hpPercent: (number|null), statuses: Set<string>, armor: (Set<string>|null)}}
  */
 export function stateOf(actor) {
-  return {inCombat: inCombat(actor), hpPercent: hitPointPercent(actor), statuses: new Set(actor.statuses ?? [])};
+  return {inCombat: inCombat(actor), hpPercent: hitPointPercent(actor), statuses: new Set(actor.statuses ?? []),
+    armor: armorOf(actor)};
 }
 
 /* -------------------------------------------- */
@@ -167,6 +180,13 @@ export function registerAutomation() {
     const parent = effect.parent;
     schedule(parent?.documentName === "Actor" ? parent : parent?.parent);
   };
+  // Armor put on or taken off (dnd5e)
+  const onItem = item => {
+    if ( (game.system.id === "dnd5e") && (item.parent?.documentName === "Actor") && (item.type === "equipment") ) schedule(item.parent);
+  };
+  Hooks.on("createItem", onItem);
+  Hooks.on("updateItem", onItem);
+  Hooks.on("deleteItem", onItem);
   Hooks.on("createActiveEffect", onEffect);
   Hooks.on("updateActiveEffect", onEffect);
   Hooks.on("deleteActiveEffect", onEffect);

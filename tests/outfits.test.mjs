@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {alternateFiles, autoMatches, barPercent, cycleOutfit, findOutfit, hasAuto, isVideo, labelFromStem,
+import {ARMOR_TYPES, EXPRESSIONS, armorState, nameChange, normalizeExpression, stageName, alternateFiles, autoMatches, barPercent, cycleOutfit, findOutfit, hasAuto, isVideo, labelFromStem,
   normalizeAuto, normalizeOutfit, normalizeOutfits, outfitsFromFiles, planAuto, quickStartOutfits, sharesStem,
   splitKind, textureScale, uniqueNames, usableOutfits} from "../scripts/outfits.mjs";
 
@@ -15,7 +15,7 @@ test("normalizeOutfit fills the defaults and keeps videos out of the portrait", 
   assert.equal(o.token, "a/b.webm");
   assert.equal(o.scale, 1.5);
   assert.equal(o.mirror, true);
-  assert.deepEqual(o.auto, {combat: false, hp: null, status: []});
+  assert.deepEqual(o.auto, {combat: false, hp: null, status: [], armor: []});
   assert.ok(o.id);
 });
 
@@ -139,7 +139,7 @@ const state = (extra={}) => ({inCombat: false, hpPercent: 100, statuses: [], ...
 
 test("normalizeAuto and hasAuto", () => {
   assert.deepEqual(normalizeAuto({combat: 1, hp: "40", status: ["prone", "prone", "", 5]}),
-    {combat: true, hp: 40, status: ["prone"]});
+    {combat: true, hp: 40, status: ["prone"], armor: []});
   assert.equal(normalizeAuto({hp: 0}).hp, null);
   assert.equal(normalizeAuto({hp: 250}).hp, 100);
   assert.equal(hasAuto(outfit("A")), false);
@@ -215,4 +215,50 @@ test("uniqueNames keeps token and portrait files of one set together", () => {
 test("uniqueNames handles a kind word in front", () => {
   const names = uniqueNames(["token-hero.webp"], new Set(["token-hero.webp"]));
   assert.equal(names.get("token-hero.webp"), "token-hero-2.webp");
+});
+
+test("outfits carry a mood and a disguise", () => {
+  const o = normalizeOutfit({label: "Angry", token: "a.webp", expression: " Angry ", disguise: "  Old Merchant "}, makeId);
+  assert.equal(o.expression, "angry");
+  assert.equal(o.disguise, "Old Merchant");
+  assert.equal(normalizeOutfit({token: "a.webp", expression: "bored"}, makeId).expression, "");
+  assert.equal(normalizeOutfit({token: "a.webp"}, makeId).disguise, "");
+  assert.equal(normalizeExpression(null), "");
+  assert.ok(EXPRESSIONS.includes("hurt"));
+});
+
+test("a disguise keeps the real name aside and gives it back", () => {
+  assert.deepEqual(nameChange("Gruk", null, "Baron"), {name: "Baron", real: "Gruk"});
+  assert.deepEqual(nameChange("Baron", "Gruk", "Monk"), {name: "Monk", real: "Gruk"});
+  assert.deepEqual(nameChange("Baron", "Gruk", ""), {name: "Gruk", real: null});
+  assert.deepEqual(nameChange("Gruk", null, ""), {name: "Gruk", real: null});
+  assert.deepEqual(nameChange("Baron", null, "Baron"), {name: "Baron", real: null});
+});
+
+test("the stage shows the disguise of the outfit shown, else of the outfit worn", () => {
+  const baron = {disguise: "Baron"};
+  const plain = {disguise: ""};
+  assert.equal(stageName("Gruk", baron, null), "Baron");
+  assert.equal(stageName("Gruk", plain, baron), "Baron");
+  assert.equal(stageName("Gruk", plain, plain), "Gruk");
+  assert.equal(stageName("Gruk", null, null), "Gruk");
+});
+
+test("armor rules follow the equipped armor", () => {
+  assert.deepEqual(normalizeAuto({armor: ["heavy", "bogus", "heavy", "none"]}).armor, ["none", "heavy"]);
+  assert.equal(hasAuto(outfit("A", {auto: {armor: ["light"]}})), true);
+  const plate = armorState([{type: "equipment", equipped: true, kind: "heavy"}, {type: "equipment", equipped: false, kind: "light"}]);
+  assert.ok(plate.has("heavy") && !plate.has("light") && !plate.has("none"));
+  const robes = armorState([{type: "equipment", equipped: true, kind: "shield"}, {type: "weapon", equipped: true, kind: "heavy"}]);
+  assert.ok(robes.has("none") && robes.has("shield") && !robes.has("heavy"));
+  const heavy = outfit("Plate", {auto: {armor: ["heavy"]}});
+  const none = outfit("Street", {auto: {armor: ["none"]}});
+  assert.equal(autoMatches(heavy, state({armor: plate})), true);
+  assert.equal(autoMatches(none, state({armor: plate})), false);
+  assert.equal(autoMatches(none, state({armor: robes})), true);
+  assert.equal(autoMatches(heavy, state({armor: null})), false);
+  assert.equal(autoMatches(heavy, state()), false);
+  const plan = planAuto([none, heavy], state({armor: plate}), {manual: null, current: "x", autoId: null});
+  assert.equal(plan.wear, "Plate");
+  assert.ok(ARMOR_TYPES.includes("shield"));
 });

@@ -710,3 +710,458 @@
 #token-hud .stw-hud-button i {
   pointer-events: none;
 }
+
+/* -------------------------------------------- */
+/*  Card additions: disguise and mood           */
+/* -------------------------------------------- */
+
+.stw-identity {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--stw-muted);
+}
+
+.stw-identity label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stw-identity i {
+  flex: none;
+  width: 14px;
+  text-align: center;
+}
+
+.stw-app .stw-identity input[type="text"],
+.stw-app .stw-identity select {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  border: 1px solid var(--stw-line);
+  border-radius: 8px;
+  background: var(--stw-field);
+  color: var(--stw-ink);
+  padding: 0 6px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.stw-armor-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  padding: 6px 8px;
+  border: 1px solid var(--stw-line);
+  border-radius: 8px;
+  background: var(--stw-soft);
+}
+
+.stw-scene-outfit .hint {
+  margin-top: 2px;
+}
+
+/* -------------------------------------------- */
+/*  Stage controls (GM window)                  */
+/* -------------------------------------------- */
+
+.stw-stagectl .stw-shell {
+  min-height: 320px;
+}
+
+.stw-app button.stw-danger {
+  border-color: rgb(176 52 52 / 0.55);
+  color: #b03434;
+}
+
+.stw-app[data-stw-theme="foundry"] button.stw-danger {
+  color: #ef8a80;
+}
+
+.stw-app button.stw-danger:hover:not(:disabled) {
+  background: rgb(176 52 52 / 0.14);
+  border-color: #b03434;
+}
+
+.stw-stage-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stw-muted);
+  font-size: 18px;
+}
+
+.stw-stage-icon.live {
+  color: var(--stw-on-accent);
+  background: var(--stw-accent);
+  border-color: var(--stw-accent);
+}
+
+.stw-app label.stw-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--stw-muted);
+}
+
+.stw-stagectl.stw-app select {
+  height: 28px;
+  border: 1px solid var(--stw-line);
+  border-radius: 8px;
+  background: var(--stw-field);
+  color: var(--stw-ink);
+  padding: 0 8px;
+  box-shadow: none;
+}
+
+.stw-stage-add {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 8px;
+}
+
+.stw-stage-add select {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.stw-stage-slots {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 12px 12px;
+}
+
+.stw-stagecard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--stw-line);
+  border-radius: var(--stw-radius);
+  background: var(--stw-card);
+  cursor: pointer;
+}
+
+.stw-stagecard.selected {
+  border-color: var(--stw-accent);
+  box-shadow: 0 0 0 1px var(--stw-accent);
+}
+
+.stw-stagecard.speaking .stw-stagecard-img {
+  border-color: var(--stw-accent);
+}
+
+.stw-stagecard-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stw-stagecard-img {
+  flex: none;
+  width: 44px;
+  height: 52px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--stw-thumb);
+  border: 2px solid var(--stw-line);
+}
+
+.stw-stagecard-img img,
+.stw-stagecard-img video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+}
+
+.stw-stagecard-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stw-stagecard-text strong {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stw-stagecard-text small {
+  color: var(--stw-muted);
+  font-size: 11px;
+}
+
+.stw-stagecard-tools {
+  display: flex;
+  gap: 2px;
+}
+
+.stw-outfit-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stw-app button.stw-pick {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  width: 78px;
+  height: auto;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--stw-field);
+  white-space: normal;
+}
+
+.stw-app button.stw-pick.active {
+  border-color: var(--stw-accent);
+  box-shadow: 0 0 0 1px var(--stw-accent);
+  background: var(--stw-accent-soft);
+}
+
+.stw-pick-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--stw-thumb);
+}
+
+.stw-pick-img img,
+.stw-pick-img video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  border: none;
+}
+
+.stw-pick-label {
+  display: block;
+  font-size: 10px;
+  line-height: 1.15;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stw-pick kbd {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  min-width: 14px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.62);
+  color: #fff;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+  border: none;
+  box-shadow: none;
+}
+
+.stw-stage-hint {
+  margin: 0;
+  color: var(--stw-muted);
+  font-size: 12px;
+}
+
+/* -------------------------------------------- */
+/*  The stage on the screen                     */
+/* -------------------------------------------- */
+
+/* Below the interface of Foundry: windows, sidebar and hotbar stay on top of the portraits */
+.stw-stage {
+  --stw-h: 480px;
+  --stw-w: 340px;
+  --stw-edge: 16px;
+  --stw-step: 120px;
+  --stw-inset: 0px;
+  --stw-gold: #e7c27a;
+  position: fixed;
+  inset: 0 var(--stw-inset) 0 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.stw-stage.active {
+  opacity: 1;
+}
+
+.stw-stage .stw-backdrop {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.stw-stage[data-backdrop="soft"] .stw-backdrop {
+  opacity: 1;
+  background:
+    linear-gradient(0deg, rgb(10 8 14 / 0.72) 0%, rgb(10 8 14 / 0.32) 34%, rgb(10 8 14 / 0) 62%),
+    radial-gradient(ellipse at 50% 42%, rgb(10 8 14 / 0) 38%, rgb(10 8 14 / 0.5) 100%);
+}
+
+.stw-stage[data-backdrop="dark"] .stw-backdrop {
+  opacity: 1;
+  background: rgb(8 6 12 / 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.stw-stage .stw-actors {
+  position: absolute;
+  inset: 0;
+}
+
+.stw-stage .stw-actor {
+  --stw-x: calc(var(--stw-edge) + var(--stw-pos, 0) * var(--stw-step));
+  position: absolute;
+  bottom: 0;
+  width: var(--stw-w);
+  height: var(--stw-h);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.35s ease, left 0.45s ease, right 0.45s ease;
+  will-change: transform, opacity;
+}
+
+.stw-stage .stw-actor[data-side="left"] {
+  left: var(--stw-x);
+}
+
+.stw-stage .stw-actor[data-side="right"] {
+  right: var(--stw-x);
+}
+
+.stw-stage .stw-actor.entering,
+.stw-stage .stw-actor.leaving {
+  opacity: 0;
+}
+
+.stw-stage .stw-actor[data-side="left"].entering,
+.stw-stage .stw-actor[data-side="left"].leaving {
+  transform: translateX(-60px);
+}
+
+.stw-stage .stw-actor[data-side="right"].entering,
+.stw-stage .stw-actor[data-side="right"].leaving {
+  transform: translateX(60px);
+}
+
+/* Who speaks stands out, the others step back */
+.stw-stage.has-speaker .stw-actor:not(.speaking) {
+  filter: brightness(0.62) saturate(0.75);
+}
+
+.stw-stage .stw-actor.speaking {
+  transform: translateY(-10px) scale(1.04);
+  transform-origin: 50% 100%;
+}
+
+.stw-stage .stw-picture {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.stw-stage .stw-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 0.55));
+  opacity: 1;
+  transition: opacity 0.35s ease;
+  user-select: none;
+}
+
+.stw-stage .stw-media.stw-fresh {
+  opacity: 0;
+}
+
+/* The name plate sits on the lower part of the portrait, above the hotbar */
+.stw-stage .stw-plate {
+  position: absolute;
+  left: 50%;
+  bottom: max(90px, 22vh);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 96%;
+  padding: 5px 18px 6px;
+  border-radius: 999px;
+  border: 1px solid rgb(231 194 122 / 0.55);
+  background: linear-gradient(180deg, rgb(32 26 38 / 0.9), rgb(18 14 24 / 0.92));
+  color: #f6efe2;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
+  text-align: center;
+  white-space: nowrap;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stw-stage .stw-plate-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(14px, 1.5vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.stw-stage .stw-plate-real {
+  font-size: 11px;
+  color: #cfc4b0;
+}
+
+.stw-stage .stw-plate-real:empty {
+  display: none;
+}
+
+.stw-stage .stw-actor.speaking .stw-plate {
+  border-color: var(--stw-gold);
+  box-shadow: 0 0 0 1px var(--stw-gold), 0 6px 20px rgb(231 194 122 / 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stw-stage,
+  .stw-stage .stw-actor,
+  .stw-stage .stw-media,
+  .stw-stage .stw-backdrop {
+    transition-duration: 0.01s;
+  }
+}
