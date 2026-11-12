@@ -1,0 +1,202 @@
+{
+  "STW": {
+    "LANGUAGE": {
+      "default": "Like Foundry",
+      "de": "Deutsch",
+      "en": "English"
+    },
+    "SETTINGS": {
+      "uiLanguage": {
+        "name": "Module language",
+        "hint": "Language of Token Wardrobe on this device. \"Like Foundry\" follows Foundry's language."
+      },
+      "theme": {
+        "name": "Look",
+        "hint": "Signature shows the windows on warm paper, Foundry keeps them dark like the rest of Foundry.",
+        "signature": "Signature (paper)",
+        "foundry": "Foundry (dark)"
+      },
+      "sheetButton": {
+        "name": "Button on the sheet portrait",
+        "hint": "Show a small shirt button over the portrait of every character sheet. It opens the outfits next to the portrait. This device only."
+      },
+      "hudButton": {
+        "name": "Button in the token HUD",
+        "hint": "Show the shirt button in the token HUD. This device only."
+      },
+      "playersWear": {
+        "name": "Players put outfits on",
+        "hint": "Players who own a character can switch its outfits."
+      },
+      "playersEdit": {
+        "name": "Players manage the wardrobe",
+        "hint": "Players who own a character can add, rename, sort and remove its outfits."
+      },
+      "allScenes": {
+        "name": "Linked tokens on all scenes",
+        "hint": "A new outfit also goes on the linked tokens of the character on every scene. Players ask the GM client to do the scenes they cannot change. Off: only the scene you are looking at."
+      },
+      "transition": {
+        "name": "Change of the token image",
+        "hint": "How the token image changes when an outfit goes on.",
+        "none": "Instant",
+        "fade": "Fade",
+        "swirl": "Swirl",
+        "waterDrop": "Water drop",
+        "morph": "Morph",
+        "crosshatch": "Crosshatch",
+        "wind": "Wind",
+        "waves": "Waves",
+        "whiteNoise": "White noise",
+        "hologram": "Hologram",
+        "hole": "Hole",
+        "holeSwirl": "Hole swirl",
+        "glitch": "Glitch",
+        "dots": "Dots"
+      },
+      "automation": {
+        "name": "Automatic outfits",
+        "hint": "Outfits with an automation put themselves on at the start of a fight, below a share of hit points or while a status is active. Only the active GM runs the rules."
+      }
+    },
+    "gear": "Settings",
+    "SELFTEST": {
+      "Title": "Self test",
+      "Run": "Run self test",
+      "Hint": "Checks after an update that everything the module relies on is there.",
+      "Passed": "Self test passed: {checks} checks.",
+      "Problems": "Self test: {problems} problems in {checks} checks.",
+      "Version": "Foundry {current}, verified with {tested}.",
+      "NewVersions": "Foundry is newer than the verified version ({versions}). Run the self test if something looks wrong.",
+      "Dialog": "Foundry's dialogs are missing.",
+      "Texts": "Missing texts: {keys}",
+      "Files": "Foundry's file functions are missing.",
+      "Hud": "The token HUD palette is missing.",
+      "Sheet": "The actor sheet class is missing.",
+      "Wildcard": "The list of wildcard images is missing.",
+      "Bar": "The token bar reading is missing.",
+      "Transitions": "Foundry does not know the token changes: {types}",
+      "Status": "The list of status effects is missing.",
+      "Socket": "The socket of the module is not switched on.",
+      "ActiveGM": "Foundry does not name the active GM.",
+      "Storage": "The setting {key} is missing.",
+      "Logic": "The rules for file names, scale and automation do not work.",
+      "Broken": "Characters with a damaged wardrobe: {names}"
+    },
+    "DEBUG": {
+      "Title": "Debug file",
+      "Save": "Save debug file",
+      "Hint": "One file about all of Sephral's modules in this world, for bug reports. It contains chat text and whispers.",
+      "Entry": "Token Wardrobe",
+      "Saved": "Debug file saved: {file}. It contains chat text and whispers, check it before you share it."
+    },
+    "Window": {
+      "title": "Wardrobe: {name}",
+      "menuTitle": "Wardrobe",
+      "menuLabel": "Open wardrobe",
+      "menuHint": "Opens the wardrobe of the selected token or of your character.",
+      "count": "{count} outfits",
+      "unlinked": "This token only",
+      "addImage": "Image",
+      "addImageHint": "Pick one image or video in the file browser and make an outfit of it",
+      "upload": "Upload",
+      "uploadHint": "Upload images from your computer. You can also drop them anywhere in this window.",
+      "folder": "Folder",
+      "folderHint": "Make an outfit of every image in a folder",
+      "suggest": "Find variants",
+      "suggestHint": "Look next to the portrait and the token image for files with a similar name",
+      "wildcard": "Wildcard images",
+      "wildcardHint": "Take the images of the random token as outfits",
+      "new": "New outfit",
+      "newHint": "Add an empty outfit and fill it with images",
+      "newName": "New outfit",
+      "emptyTitle": "Nothing in the wardrobe yet",
+      "emptyText": "An outfit is a portrait and a token image with a name. One click puts it on, and the sheet and the token change together.",
+      "quickStart": "Start with three outfits",
+      "dropHint": "Drop images here: from your computer, from the file browser or from another character. Files named like hero-token and hero-portrait become one outfit.",
+      "noFiles": "You may not browse or upload files. You can still put outfits on. The GM can allow file access in the permission settings.",
+      "noUpload": "You may not upload files, so images cannot be dropped in from your computer. Images from the file browser still work.",
+      "noBrowse": "You may not browse files. Drop images in or upload them.",
+      "noUploadNotice": "You may not upload files. Ask the GM for the permission.",
+      "noBrowseNotice": "You may not browse files. Ask the GM for the permission, or drop an image into the window.",
+      "nothingNew": "Nothing new: these images are already in the wardrobe.",
+      "added": "Outfits added: {count}.",
+      "copied": "Outfits copied from {name}: {count}.",
+      "skipped": "Files skipped, only images and videos are accepted: {count}.",
+      "uploadFailed": "{name} could not be uploaded.",
+      "noImages": "No images in {path}.",
+      "folderFailed": "The folder {path} could not be read.",
+      "wildcardNone": "This token has no wildcard images.",
+      "countOne": "{count} outfit"
+    },
+    "Card": {
+      "portrait": "Portrait",
+      "token": "Token",
+      "portraitEmpty": "No portrait: the portrait stays as it is",
+      "tokenEmpty": "No token image: the token stays as it is",
+      "clear": "Clear",
+      "name": "Name of the outfit",
+      "scale": "Scale",
+      "scaleHint": "Scale of the token image, empty keeps the token as it is",
+      "mirror": "Mirror",
+      "mirrorHint": "Mirror the token image",
+      "wear": "Put on",
+      "worn": "Worn",
+      "auto": "Automation",
+      "moveLeft": "Move up the list",
+      "moveRight": "Move down the list",
+      "remove": "Remove outfit",
+      "removeTitle": "Remove outfit",
+      "removeText": "Remove {name} from the wardrobe? The image files stay."
+    },
+    "Quick": {
+      "street": "Street clothes",
+      "battle": "Battle gear",
+      "fine": "Fine clothes"
+    },
+    "Auto": {
+      "title": "Automation: {name}",
+      "intro": "This outfit puts itself on when one of these is true. The first matching outfit in the list wins. When the situation ends, the outfit chosen by hand comes back.",
+      "combat": "While the character is in a running fight",
+      "hp": "When the hit points are below",
+      "status": "While one of these statuses is active",
+      "outro": "Leave everything off for a normal outfit. Only the active GM applies the rules.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "inCombat": "in a fight",
+      "belowHp": "below {percent} percent hit points",
+      "whileStatus": "while {status}"
+    },
+    "Suggest": {
+      "title": "Variants for {name}",
+      "intro": "These files look like variants of the portrait or the token image. Tick the ones to add.",
+      "add": "Add",
+      "none": "No similar files found next to the images."
+    },
+    "Palette": {
+      "open": "Open the wardrobe",
+      "empty": "No outfits yet.",
+      "emptyEdit": "No outfits yet. Open the wardrobe to make some."
+    },
+    "Sheet": {
+      "button": "Outfits",
+      "wardrobe": "Wardrobe"
+    },
+    "HUD": {
+      "button": "Outfits"
+    },
+    "Keys": {
+      "nextOutfit": "Next outfit of the selected tokens",
+      "previousOutfit": "Previous outfit of the selected tokens",
+      "openWardrobe": "Open the wardrobe of the selected token"
+    },
+    "Notify": {
+      "noTarget": "No character to dress.",
+      "select": "Select a token first.",
+      "noRight": "You may not change the outfit of {name}.",
+      "noOutfit": "{name} has no outfit {outfit}.",
+      "noOutfits": "{name} has no outfits to switch between.",
+      "videoPortrait": "A video can only be a token image, not a portrait."
+    }
+  }
+}

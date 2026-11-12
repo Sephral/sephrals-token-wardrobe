@@ -1,0 +1,36 @@
+{
+  "id": "sephrals-token-wardrobe",
+  "title": "Sephral’s Token Wardrobe",
+  "description": "A wardrobe for every character: street clothes, battle gear or formal wear, each with its portrait and token image, switched with one click from the sheet or the token.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": 13,
+    "verified": "14.370"
+  },
+  "authors": [
+    {
+      "name": "Sephral",
+      "url": "https://github.com/Sephral"
+    }
+  ],
+  "url": "https://github.com/Sephral/sephrals-token-wardrobe.git",
+  "esmodules": [
+    "scripts/stw.mjs"
+  ],
+  "styles": [
+    "styles/stw.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    }
+  ],
+  "socket": true
+}

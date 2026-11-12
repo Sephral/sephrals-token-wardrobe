@@ -1,0 +1,202 @@
+{
+  "STW": {
+    "LANGUAGE": {
+      "default": "Wie Foundry",
+      "de": "Deutsch",
+      "en": "English"
+    },
+    "SETTINGS": {
+      "uiLanguage": {
+        "name": "Modulsprache",
+        "hint": "Sprache von Token Wardrobe auf diesem Gerät. \"Wie Foundry\" folgt der Sprache von Foundry."
+      },
+      "theme": {
+        "name": "Aussehen",
+        "hint": "Signature zeigt die Fenster auf warmem Papier, Foundry lässt sie dunkel wie den Rest von Foundry.",
+        "signature": "Signature (Papier)",
+        "foundry": "Foundry (dunkel)"
+      },
+      "sheetButton": {
+        "name": "Knopf am Porträt des Bogens",
+        "hint": "Zeigt einen kleinen Hemd-Knopf über dem Porträt jedes Charakterbogens. Er öffnet die Outfits direkt neben dem Porträt. Nur dieses Gerät."
+      },
+      "hudButton": {
+        "name": "Knopf im Token-HUD",
+        "hint": "Zeigt den Hemd-Knopf im Token-HUD. Nur dieses Gerät."
+      },
+      "playersWear": {
+        "name": "Spieler ziehen Outfits an",
+        "hint": "Spieler, die eine Figur besitzen, dürfen deren Outfits wechseln."
+      },
+      "playersEdit": {
+        "name": "Spieler verwalten den Kleiderschrank",
+        "hint": "Spieler, die eine Figur besitzen, dürfen deren Outfits anlegen, umbenennen, sortieren und entfernen."
+      },
+      "allScenes": {
+        "name": "Verknüpfte Token auf allen Szenen",
+        "hint": "Ein neues Outfit kommt auch auf die verknüpften Token der Figur in jeder Szene. Spieler bitten den SL-Client um die Szenen, die sie nicht ändern dürfen. Aus: nur die Szene, die du siehst."
+      },
+      "transition": {
+        "name": "Wechsel des Tokenbilds",
+        "hint": "Wie das Tokenbild wechselt, wenn ein Outfit angezogen wird.",
+        "none": "Sofort",
+        "fade": "Überblenden",
+        "swirl": "Wirbel",
+        "waterDrop": "Wassertropfen",
+        "morph": "Morphen",
+        "crosshatch": "Schraffur",
+        "wind": "Wind",
+        "waves": "Wellen",
+        "whiteNoise": "Rauschen",
+        "hologram": "Hologramm",
+        "hole": "Loch",
+        "holeSwirl": "Lochwirbel",
+        "glitch": "Störung",
+        "dots": "Punkte"
+      },
+      "automation": {
+        "name": "Automatische Outfits",
+        "hint": "Outfits mit Automatik ziehen sich selbst an: beim Kampfbeginn, unter einem Anteil der Lebenspunkte oder solange ein Zustand aktiv ist. Nur der aktive SL führt die Regeln aus."
+      }
+    },
+    "gear": "Einstellungen",
+    "SELFTEST": {
+      "Title": "Selbsttest",
+      "Run": "Selbsttest starten",
+      "Hint": "Prüft nach einem Update, ob alles da ist, worauf das Modul baut.",
+      "Passed": "Selbsttest bestanden: {checks} Prüfungen.",
+      "Problems": "Selbsttest: {problems} Probleme bei {checks} Prüfungen.",
+      "Version": "Foundry {current}, geprüft mit {tested}.",
+      "NewVersions": "Foundry ist neuer als die geprüfte Version ({versions}). Starte den Selbsttest, wenn etwas nicht mehr passt.",
+      "Dialog": "Foundrys Dialoge fehlen.",
+      "Texts": "Texte fehlen: {keys}",
+      "Files": "Foundrys Dateifunktionen fehlen.",
+      "Hud": "Die Palette des Token-HUD fehlt.",
+      "Sheet": "Die Klasse der Akteurbögen fehlt.",
+      "Wildcard": "Die Liste der Wildcard-Bilder fehlt.",
+      "Bar": "Das Lesen der Token-Leiste fehlt.",
+      "Transitions": "Foundry kennt diese Tokenwechsel nicht: {types}",
+      "Status": "Die Liste der Zustände fehlt.",
+      "Socket": "Der Socket des Moduls ist nicht eingeschaltet.",
+      "ActiveGM": "Foundry nennt den aktiven SL nicht.",
+      "Storage": "Die Einstellung {key} fehlt.",
+      "Logic": "Die Regeln für Dateinamen, Größe und Automatik funktionieren nicht.",
+      "Broken": "Figuren mit beschädigtem Kleiderschrank: {names}"
+    },
+    "DEBUG": {
+      "Title": "Debug-Datei",
+      "Save": "Debug-Datei speichern",
+      "Hint": "Eine Datei über alle Module von Sephral in dieser Welt, für Fehlerberichte. Sie enthält Chattexte und Geflüster.",
+      "Entry": "Token Wardrobe",
+      "Saved": "Debug-Datei gespeichert: {file}. Sie enthält Chattexte und Geflüster, prüfe sie vor dem Teilen."
+    },
+    "Window": {
+      "title": "Kleiderschrank: {name}",
+      "menuTitle": "Kleiderschrank",
+      "menuLabel": "Kleiderschrank öffnen",
+      "menuHint": "Öffnet den Kleiderschrank des gewählten Tokens oder deiner Figur.",
+      "count": "{count} Outfits",
+      "unlinked": "Nur dieser Token",
+      "addImage": "Bild",
+      "addImageHint": "Ein Bild oder Video im Dateibrowser wählen und daraus ein Outfit machen",
+      "upload": "Hochladen",
+      "uploadHint": "Bilder vom Computer hochladen. Du kannst sie auch irgendwo in dieses Fenster ziehen.",
+      "folder": "Ordner",
+      "folderHint": "Aus jedem Bild eines Ordners ein Outfit machen",
+      "suggest": "Varianten suchen",
+      "suggestHint": "Neben Porträt und Tokenbild nach Dateien mit ähnlichem Namen suchen",
+      "wildcard": "Wildcard-Bilder",
+      "wildcardHint": "Die Bilder des Zufallstokens als Outfits übernehmen",
+      "new": "Neues Outfit",
+      "newHint": "Ein leeres Outfit anlegen und mit Bildern füllen",
+      "newName": "Neues Outfit",
+      "emptyTitle": "Noch nichts im Kleiderschrank",
+      "emptyText": "Ein Outfit ist ein Porträt und ein Tokenbild mit einem Namen. Ein Klick zieht es an, und Bogen und Token wechseln gemeinsam.",
+      "quickStart": "Mit drei Outfits beginnen",
+      "dropHint": "Bilder hierher ziehen: vom Computer, aus dem Dateibrowser oder von einer anderen Figur. Dateien wie held-token und held-portrait werden ein Outfit.",
+      "noFiles": "Du darfst keine Dateien durchsuchen oder hochladen. Outfits anziehen kannst du trotzdem. Der SL kann Dateizugriff in den Berechtigungen erlauben.",
+      "noUpload": "Du darfst keine Dateien hochladen, deshalb gehen keine Bilder vom Computer. Bilder aus dem Dateibrowser funktionieren weiter.",
+      "noBrowse": "Du darfst keine Dateien durchsuchen. Ziehe Bilder hinein oder lade sie hoch.",
+      "noUploadNotice": "Du darfst keine Dateien hochladen. Bitte den SL um die Berechtigung.",
+      "noBrowseNotice": "Du darfst keine Dateien durchsuchen. Bitte den SL um die Berechtigung oder ziehe ein Bild ins Fenster.",
+      "nothingNew": "Nichts Neues: diese Bilder sind schon im Kleiderschrank.",
+      "added": "Outfits hinzugefügt: {count}.",
+      "copied": "Outfits von {name} kopiert: {count}.",
+      "skipped": "Dateien übersprungen, nur Bilder und Videos werden angenommen: {count}.",
+      "uploadFailed": "{name} konnte nicht hochgeladen werden.",
+      "noImages": "Keine Bilder in {path}.",
+      "folderFailed": "Der Ordner {path} konnte nicht gelesen werden.",
+      "wildcardNone": "Dieser Token hat keine Wildcard-Bilder.",
+      "countOne": "{count} Outfit"
+    },
+    "Card": {
+      "portrait": "Porträt",
+      "token": "Token",
+      "portraitEmpty": "Kein Porträt: das Porträt bleibt wie es ist",
+      "tokenEmpty": "Kein Tokenbild: der Token bleibt wie er ist",
+      "clear": "Leeren",
+      "name": "Name des Outfits",
+      "scale": "Größe",
+      "scaleHint": "Größe des Tokenbilds, leer lässt den Token wie er ist",
+      "mirror": "Spiegeln",
+      "mirrorHint": "Das Tokenbild spiegeln",
+      "wear": "Anziehen",
+      "worn": "Angezogen",
+      "auto": "Automatik",
+      "moveLeft": "In der Liste nach vorn",
+      "moveRight": "In der Liste nach hinten",
+      "remove": "Outfit entfernen",
+      "removeTitle": "Outfit entfernen",
+      "removeText": "{name} aus dem Kleiderschrank entfernen? Die Bilddateien bleiben."
+    },
+    "Quick": {
+      "street": "Straßenkleidung",
+      "battle": "Kampfausrüstung",
+      "fine": "Schicke Kleidung"
+    },
+    "Auto": {
+      "title": "Automatik: {name}",
+      "intro": "Dieses Outfit zieht sich an, wenn eines davon zutrifft. Das erste passende Outfit in der Liste gewinnt. Endet die Lage, kommt das von Hand gewählte Outfit zurück.",
+      "combat": "Solange die Figur in einem laufenden Kampf ist",
+      "hp": "Wenn die Lebenspunkte unter",
+      "status": "Solange einer dieser Zustände aktiv ist",
+      "outro": "Alles aus lassen für ein normales Outfit. Nur der aktive SL wendet die Regeln an.",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "inCombat": "im Kampf",
+      "belowHp": "unter {percent} Prozent Lebenspunkte",
+      "whileStatus": "solange {status}"
+    },
+    "Suggest": {
+      "title": "Varianten für {name}",
+      "intro": "Diese Dateien sehen aus wie Varianten von Porträt oder Tokenbild. Hake an, was dazukommen soll.",
+      "add": "Hinzufügen",
+      "none": "Keine ähnlichen Dateien neben den Bildern gefunden."
+    },
+    "Palette": {
+      "open": "Kleiderschrank öffnen",
+      "empty": "Noch keine Outfits.",
+      "emptyEdit": "Noch keine Outfits. Öffne den Kleiderschrank, um welche anzulegen."
+    },
+    "Sheet": {
+      "button": "Outfits",
+      "wardrobe": "Kleiderschrank"
+    },
+    "HUD": {
+      "button": "Outfits"
+    },
+    "Keys": {
+      "nextOutfit": "Nächstes Outfit der gewählten Token",
+      "previousOutfit": "Voriges Outfit der gewählten Token",
+      "openWardrobe": "Kleiderschrank des gewählten Tokens öffnen"
+    },
+    "Notify": {
+      "noTarget": "Keine Figur zum Anziehen.",
+      "select": "Wähle zuerst einen Token.",
+      "noRight": "Du darfst das Outfit von {name} nicht ändern.",
+      "noOutfit": "{name} hat kein Outfit {outfit}.",
+      "noOutfits": "{name} hat keine Outfits zum Wechseln.",
+      "videoPortrait": "Ein Video kann nur Tokenbild sein, kein Porträt."
+    }
+  }
+}

@@ -1,0 +1,106 @@
+<div class="stw-shell">
+  <header class="stw-head">
+    <div class="stw-who">
+      <span class="stw-who-img">{{{whoImage}}}</span>
+      <div class="stw-who-text">
+        <strong>{{name}}</strong>
+        <small>{{subtitle}}</small>
+      </div>
+    </div>
+    {{#if editable}}
+    <div class="stw-toolbar">
+      <button type="button" data-action="addImage" {{#unless rights.browse}}disabled{{/unless}}
+        data-tooltip="{{localize "STW.Window.addImageHint"}}"><i class="fa-solid fa-image" inert></i> {{localize "STW.Window.addImage"}}</button>
+      <button type="button" data-action="upload" {{#unless rights.upload}}disabled{{/unless}}
+        data-tooltip="{{localize "STW.Window.uploadHint"}}"><i class="fa-solid fa-upload" inert></i> {{localize "STW.Window.upload"}}</button>
+      <button type="button" data-action="importFolder" {{#unless rights.browse}}disabled{{/unless}}
+        data-tooltip="{{localize "STW.Window.folderHint"}}"><i class="fa-solid fa-folder-open" inert></i> {{localize "STW.Window.folder"}}</button>
+      <button type="button" data-action="suggest" {{#unless rights.browse}}disabled{{/unless}}
+        data-tooltip="{{localize "STW.Window.suggestHint"}}"><i class="fa-solid fa-wand-magic-sparkles" inert></i> {{localize "STW.Window.suggest"}}</button>
+      {{#if wildcard}}
+      <button type="button" data-action="wildcard"
+        data-tooltip="{{localize "STW.Window.wildcardHint"}}"><i class="fa-solid fa-shuffle" inert></i> {{localize "STW.Window.wildcard"}}</button>
+      {{/if}}
+      <button type="button" data-action="newOutfit"
+        data-tooltip="{{localize "STW.Window.newHint"}}"><i class="fa-solid fa-plus" inert></i> {{localize "STW.Window.new"}}</button>
+      <input type="file" class="stw-file" multiple hidden accept="{{accept}}">
+    </div>
+    {{/if}}
+  </header>
+
+  {{#each notices}}
+  <p class="stw-notice"><i class="fa-solid fa-circle-info" inert></i> {{this}}</p>
+  {{/each}}
+
+  {{#if empty}}
+  <section class="stw-start">
+    <i class="fa-solid fa-shirt stw-start-icon" inert></i>
+    <h3>{{localize "STW.Window.emptyTitle"}}</h3>
+    <p>{{localize "STW.Window.emptyText"}}</p>
+    {{#if editable}}
+    <button type="button" class="stw-primary" data-action="quickStart"><i class="fa-solid fa-wand-magic-sparkles" inert></i>
+      {{localize "STW.Window.quickStart"}}</button>
+    <p class="stw-start-names">{{startNames}}</p>
+    {{/if}}
+  </section>
+  {{else}}
+  <div class="stw-cards">
+    {{#each outfits}}
+    <article class="stw-card{{#if current}} current{{/if}}{{#unless usable}} unusable{{/unless}}"
+      data-outfit-id="{{id}}" data-index="{{index}}" {{#if ../editable}}draggable="true"{{/if}}>
+      <div class="stw-slots">
+        <div class="stw-slot" data-slot="portrait">
+          <button type="button" class="stw-slot-pick" data-action="pickPortrait" {{#unless ../editable}}disabled{{/unless}}
+            data-tooltip="{{#if portrait}}{{portrait}}{{else}}{{localize "STW.Card.portraitEmpty"}}{{/if}}">
+            {{#if portrait}}{{{portraitHTML}}}{{else}}<i class="fa-solid fa-user" inert></i>{{/if}}
+          </button>
+          <span class="stw-slot-label">{{localize "STW.Card.portrait"}}</span>
+          {{#if portrait}}{{#if ../editable}}<button type="button" class="stw-slot-clear" data-action="clearPortrait"
+            data-tooltip="{{localize "STW.Card.clear"}}" aria-label="{{localize "STW.Card.clear"}}"><i class="fa-solid fa-xmark" inert></i></button>{{/if}}{{/if}}
+        </div>
+        <div class="stw-slot" data-slot="token">
+          <button type="button" class="stw-slot-pick round" data-action="pickToken" {{#unless ../editable}}disabled{{/unless}}
+            data-tooltip="{{#if token}}{{token}}{{else}}{{localize "STW.Card.tokenEmpty"}}{{/if}}">
+            {{#if token}}{{{tokenHTML}}}{{else}}<i class="fa-solid fa-circle-user" inert></i>{{/if}}
+          </button>
+          <span class="stw-slot-label">{{localize "STW.Card.token"}}</span>
+          {{#if token}}{{#if ../editable}}<button type="button" class="stw-slot-clear" data-action="clearToken"
+            data-tooltip="{{localize "STW.Card.clear"}}" aria-label="{{localize "STW.Card.clear"}}"><i class="fa-solid fa-xmark" inert></i></button>{{/if}}{{/if}}
+        </div>
+      </div>
+      <input type="text" class="stw-name" data-field="label" value="{{label}}" {{#unless ../editable}}disabled{{/unless}}
+        aria-label="{{localize "STW.Card.name"}}" placeholder="{{localize "STW.Card.name"}}">
+      {{#if ../editable}}
+      <div class="stw-look">
+        <label data-tooltip="{{localize "STW.Card.scaleHint"}}">{{localize "STW.Card.scale"}}
+          <input type="number" data-field="scale" value="{{scale}}" min="0.1" max="10" step="0.05" placeholder="1"></label>
+        <label data-tooltip="{{localize "STW.Card.mirrorHint"}}"><input type="checkbox" data-field="mirror" {{#if mirror}}checked{{/if}}>
+          {{localize "STW.Card.mirror"}}</label>
+      </div>
+      {{/if}}
+      <div class="stw-card-actions">
+        {{#if ../wearable}}
+        <button type="button" class="stw-primary" data-action="wear" {{#unless usable}}disabled{{/unless}}>
+          {{#if current}}<i class="fa-solid fa-check" inert></i> {{localize "STW.Card.worn"}}{{else}}<i class="fa-solid fa-shirt" inert></i> {{localize "STW.Card.wear"}}{{/if}}</button>
+        {{/if}}
+        {{#if ../editable}}
+        <span class="stw-spacer"></span>
+        <button type="button" class="stw-icon{{#if hasAuto}} on{{/if}}" data-action="auto"
+          data-tooltip="{{#if hasAuto}}{{autoSummary}}{{else}}{{localize "STW.Card.auto"}}{{/if}}" aria-label="{{localize "STW.Card.auto"}}"><i class="fa-solid fa-bolt" inert></i></button>
+        <button type="button" class="stw-icon" data-action="moveLeft" {{#if first}}disabled{{/if}}
+          data-tooltip="{{localize "STW.Card.moveLeft"}}" aria-label="{{localize "STW.Card.moveLeft"}}"><i class="fa-solid fa-arrow-left" inert></i></button>
+        <button type="button" class="stw-icon" data-action="moveRight" {{#if last}}disabled{{/if}}
+          data-tooltip="{{localize "STW.Card.moveRight"}}" aria-label="{{localize "STW.Card.moveRight"}}"><i class="fa-solid fa-arrow-right" inert></i></button>
+        <button type="button" class="stw-icon" data-action="remove"
+          data-tooltip="{{localize "STW.Card.remove"}}" aria-label="{{localize "STW.Card.remove"}}"><i class="fa-solid fa-trash" inert></i></button>
+        {{/if}}
+      </div>
+    </article>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{#if editable}}
+  <footer class="stw-foot"><i class="fa-solid fa-arrow-down-to-line" inert></i> {{localize "STW.Window.dropHint"}}</footer>
+  {{/if}}
+</div>
