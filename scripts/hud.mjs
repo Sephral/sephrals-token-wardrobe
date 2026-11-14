@@ -7,8 +7,10 @@
  */
 
 import {MODULE_ID, setting, t} from "./config.mjs";
+import {feelingsOffered, setFeeling} from "./feelings.mjs";
 import {createPalette, paletteHTML} from "./palette.mjs";
 import {canEdit, canWear, wearableOutfits} from "./store.mjs";
+import {rerollLook} from "./variety.mjs";
 import {countFeature} from "./usage.mjs";
 import {addToStage} from "./stage.mjs";
 import {openWardrobe} from "./wardrobe-app.mjs";
@@ -43,8 +45,9 @@ export function onRenderTokenHUD(hud, element) {
   if ( !actor ) return;
   const wearable = canWear(actor);
   const editable = canEdit(actor);
-  if ( !wearable ) return;
-  if ( !editable && !wearableOutfits(actor).length ) return;
+  const feels = feelingsOffered(token);
+  if ( !wearable && !feels ) return;
+  if ( !editable && !wearableOutfits(actor).length && !feels ) return;
   const column = element.querySelector(".col.right");
   if ( !column || column.querySelector(".stw-hud-button") ) return;
 
@@ -60,7 +63,7 @@ export function onRenderTokenHUD(hud, element) {
     setOpen(hud, openFor !== token.uuid);
   });
 
-  const palette = createPalette(token, "palette stw-hud-palette", "foundry");
+  const palette = createPalette(token, "palette stw-hud-palette", "foundry", {reroll: true});
   palette.addEventListener("click", event => onPaletteClick(event, hud, token));
   column.append(button, palette);
   // Another palette of the HUD closes this one
@@ -99,6 +102,18 @@ async function onPaletteClick(event, hud, token) {
   if ( target.dataset.stw === "stage" ) {
     setOpen(hud, false);
     addToStage(token, {open: true});
+    return;
+  }
+  if ( target.dataset.stw === "feel" ) {
+    reopenAfterRedraw(hud, token);
+    await setFeeling(token, target.dataset.feeling || null);
+    refreshPalette(hud, token);
+    return;
+  }
+  if ( target.dataset.stw === "reroll" ) {
+    reopenAfterRedraw(hud, token);
+    await rerollLook(token);
+    refreshPalette(hud, token);
     return;
   }
   if ( target.dataset.stw !== "wear" ) return;
@@ -144,7 +159,7 @@ let pendingReopen = null;
 function refreshPalette(hud, token) {
   const old = hud.element?.querySelector(".stw-hud-palette");
   if ( !old || (hud.document !== token) ) return;
-  old.innerHTML = paletteHTML(token);
+  old.innerHTML = paletteHTML(token, {reroll: true});
 }
 
 /** Re-render an open token HUD, e.g. after a setting changed. */

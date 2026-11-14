@@ -9,9 +9,11 @@
 
 import {MODULE_ID, makeId, setting, t} from "./config.mjs";
 import {trace} from "./debug.mjs";
+import {backdropByRef, getBackdrops, playBackdropSound, switchPlaylists} from "./backdrops.mjs";
+import {TINTS, cycleBackdrop, withBackdrop} from "./backdrop-logic.mjs";
 import {isVideo, stageName, usableOutfits} from "./outfits.mjs";
-import {emptyStage, layoutStage, normalizeStage, resolveExpression, sameSubject, stageMetrics, startOutfit, withSlot,
-  withSpeaker, withoutSlot, changeSlot, MAX_SLOTS} from "./stage-logic.mjs";
+import {DEPTH_SCALES, PLACES, emptyStage, layoutStage, normalizeDepth, normalizeStage, resolveExpression, sameSubject,
+  stageMetrics, startOutfit, withSlot, withSpeaker, withoutSlot, changeSlot, MAX_SLOTS} from "./stage-logic.mjs";
 import {baseOf, currentOutfitId, getOutfits, resolveTarget} from "./store.mjs";
 import {countFeature} from "./usage.mjs";
 import {wear} from "./wear.mjs";
@@ -108,7 +110,8 @@ function slotFor({base, actor, token}, ref, previous = null) {
     img,
     outfitId: outfit?.id ?? null,
     expression: outfit?.expression ?? "",
-    side: previous?.side ?? null
+    side: previous?.side ?? null,
+    depth: previous?.depth ?? 0
   };
 }
 
@@ -188,11 +191,13 @@ export async function addToStage(target, {outfit = null, side = null, speaking =
  * @param {object} [options]
  * @param {boolean} [options.replace=true]       Start with an empty stage. Off: add to the one which is there
  * @param {Actor|Token|TokenDocument|string} [options.speaker]    Who speaks
- * @param {"soft"|"dark"|"none"} [options.backdrop]
+ * @param {"soft"|"dark"|"none"} [options.backdrop]   The shading over the picture
+ * @param {string|number|null} [options.scenery]     A backdrop picture of the library (id, name or position). Without
+ *   it the backdrop picture which is up stays
  * @param {boolean} [options.open=false]         Open the controls of the GM
  * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
  */
-export async function showStage(actors, {replace = true, speaker = null, backdrop = null, open = false} = {}) {
+export async function showStage(actors, {replace = true, speaker = null, backdrop = null, scenery = null, open = false} = {}) {
   const list = (Array.isArray(actors) ? actors : [actors]).filter(Boolean);
   // A plain object {actor, outfit, side} names more than the character, everything else is the character
   const entries = list.map(entry => ((Object.getPrototypeOf(entry) === Object.prototype) && ("actor" in entry) ? entry : {actor: entry}));
@@ -201,8 +206,11 @@ export async function showStage(actors, {replace = true, speaker = null, backdro
     ui.notifications.warn(t("STW.Notify.noTarget"));
     return null;
   }
+  const picked = (scenery !== null) ? backdropByRef(scenery) : null;
   const state = await mutate(before => {
-    let next = replace ? emptyStage(backdrop ?? setting("stageBackdrop")) : {...before, backdrop: backdrop ?? before.backdrop};
+    let next = replace ? {...emptyStage(backdrop ?? setting("stageBackdrop")), backdropId: before.backdropId, tint: before.tint,
+      pan: before.pan} : {...before, backdrop: backdrop ?? before.backdrop};
+    if ( picked ) next = {...next, ...withBackdrop(next, picked)};
     for ( const {entry, resolved} of prepared ) {
       const old = findSlot(next, resolved.token ?? resolved.base);
       const slot = slotFor(resolved, entry.outfit ?? null, old);
@@ -225,8 +233,11 @@ export async function showStage(actors, {replace = true, speaker = null, backdro
  * Close the stage for everybody.
  * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
  */
-export function hideStage() {
-  return mutate(() => emptyStage(setting("stageBackdrop")));
+export async function hideStage() {
+  const before = getBackdrops().find(b => b.id === getStage().backdropId) ?? null;
+  const state = await mutate(() => emptyStage(setting("stageBackdrop")));
+  if ( state && before ) switchPlaylists(before, null);
+  return state;
 }
 
 /**
@@ -309,6 +320,110 @@ export function setBackdrop(backdrop) {
 }
 
 /**
+ * Put a portrait at a place of the stage: left, center or right.
+ * @param {Actor|Token|TokenDocument|string} target     Or the id of a portrait
+ * @param {"left"|"center"|"right"} place
+ * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
+ */
+export function setPlace(target, place) {
+  if ( !PLACES.includes(place) ) return Promise.resolve(null);
+  return mutate(before => {
+    const slot = findSlot(before, target);
+    if ( !slot ) return before;
+    // The others keep the places they stand at now
+    const layout = layoutStage(before.slots);
+    if ( layout.find(l => l.id === slot.id).side === place ) return before;
+    countFeature(MODULE_ID, "stagePlace");
+    const slots = before.slots.map(s => ({...s, side: layout.find(l => l.id === s.id).side}));
+    return {...before, slots: slots.map(s => ((s.id === slot.id) ? {...s, side: place} : s))};
+  });
+}
+
+/**
+ * Put a portrait further back or forward. Portraits further back are smaller and stand a little higher.
+ * @param {Actor|Token|TokenDocument|string} target     Or the id of a portrait
+ * @param {number|"next"} depth                          0 front, 1 middle, 2 back, or "next" to go one back and around
+ * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
+ */
+export function setDepth(target, depth) {
+  return mutate(before => {
+    const slot = findSlot(before, target);
+    if ( !slot ) return before;
+    const next = (depth === "next") ? ((slot.depth + 1) % DEPTH_SCALES.length) : normalizeDepth(depth);
+    if ( next === slot.depth ) return before;
+    countFeature(MODULE_ID, "stagePlace");
+    return changeSlot(before, slot.id, {depth: next});
+  });
+}
+
+/* -------------------------------------------- */
+/*  Backdrop pictures                           */
+/* -------------------------------------------- */
+
+/**
+ * Show a backdrop of the library behind the portraits, or take the picture away (null).
+ * @param {string|number|null} ref        Id, name or position of the backdrop
+ * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
+ */
+export async function showBackdrop(ref) {
+  const empty = (ref === null) || (ref === undefined) || (ref === "");
+  const entry = empty ? null : backdropByRef(ref);
+  if ( !empty && !entry ) {
+    ui.notifications.warn(t("STW.Backdrop.unknown", {name: String(ref)}));
+    return null;
+  }
+  const list = getBackdrops();
+  let before = null;
+  let changed = false;
+  const state = await mutate(prev => {
+    before = list.find(b => b.id === prev.backdropId) ?? null;
+    changed = (before?.id ?? null) !== (entry?.id ?? null);
+    return {...prev, ...withBackdrop(prev, entry), active: prev.active || !!entry,
+      backdrop: prev.active ? prev.backdrop : setting("stageBackdrop")};
+  });
+  if ( state && changed ) {
+    if ( entry ) countFeature(MODULE_ID, "backdropShown");
+    switchPlaylists(before, entry);
+  }
+  return state;
+}
+
+/**
+ * Show the next or the previous backdrop of the library.
+ * @param {number} step       1 or -1
+ * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
+ */
+export function stepBackdrop(step) {
+  const entry = cycleBackdrop(getBackdrops(), getStage().backdropId, step);
+  if ( !entry ) {
+    if ( game.user.isGM ) ui.notifications.info(t("STW.Backdrop.none"));
+    return Promise.resolve(null);
+  }
+  return showBackdrop(entry.id);
+}
+
+/**
+ * Set the light of the time of day over the backdrop.
+ * @param {"none"|"dawn"|"dusk"|"night"} tint
+ * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
+ */
+export function setTint(tint) {
+  if ( !TINTS.includes(tint) ) return Promise.resolve(null);
+  countFeature(MODULE_ID, "backdropOptions");
+  return mutate(before => ({...before, tint}));
+}
+
+/**
+ * Switch the slow panning of the backdrop picture.
+ * @param {boolean} pan
+ * @returns {Promise<import("./stage-logic.mjs").StageState|null>}
+ */
+export function setPan(pan) {
+  countFeature(MODULE_ID, "backdropOptions");
+  return mutate(before => ({...before, pan: !!pan}));
+}
+
+/**
  * Update the portraits and names after an outfit or a disguise changed. Only the active GM does it.
  */
 export function refreshSlots() {
@@ -383,7 +498,8 @@ function ensureOverlay() {
   overlay.className = "stw-stage";
   overlay.setAttribute("role", "region");
   overlay.setAttribute("aria-label", t("STW.Stage.title"));
-  overlay.innerHTML = '<div class="stw-backdrop"></div><div class="stw-actors"></div>';
+  overlay.innerHTML = '<div class="stw-set"></div><div class="stw-tint"></div><div class="stw-backdrop"></div>'
+    + '<div class="stw-actors"></div><div class="stw-location"></div>';
   const anchor = document.getElementById("interface");
   if ( anchor ) anchor.before(overlay);
   else document.body.append(overlay);
@@ -423,11 +539,98 @@ function layoutNow() {
   for ( const place of layout ) {
     const figure = figures.get(place.id);
     if ( !figure ) continue;
+    const depth = drawn.slots.find(s => s.id === place.id)?.depth ?? 0;
+    // Portraits in the center stand side by side around the middle of the screen
+    const shift = (place.side === "center") ? (place.pos - ((place.of - 1) / 2)) * metrics.w * 0.78 : 0;
     figure.dataset.side = place.side;
+    figure.dataset.depth = String(depth);
     figure.style.setProperty("--stw-pos", place.pos);
-    figure.style.zIndex = String(10 + place.pos + ((drawn.speaker === place.id) ? 50 : 0));
+    figure.style.setProperty("--stw-cx", `${Math.round(shift)}px`);
+    figure.style.setProperty("--stw-s", DEPTH_SCALES[depth]);
+    figure.style.setProperty("--stw-d", depth);
+    figure.style.zIndex = String(10 + place.pos + ((2 - depth) * 20) + ((drawn.speaker === place.id) ? 50 : 0));
   }
 }
+
+/** The timer which hides the title of the place. */
+let locationTimer = null;
+
+/**
+ * Show the backdrop of the state: the picture fades over the one before, the time of day and the panning follow, the
+ * sound plays on this client.
+ * @param {HTMLElement} element     The overlay
+ * @param {import("./stage-logic.mjs").StageState} state
+ */
+function applyScenery(element, state) {
+  const entry = state.backdropId ? getBackdrops().find(b => b.id === state.backdropId) : null;
+  const id = entry?.id ?? "";
+  const holder = element.querySelector(".stw-set");
+  if ( (element.dataset.setId ?? "") !== id ) {
+    element.dataset.setId = id;
+    if ( id ) element.dataset.set = "on";
+    else delete element.dataset.set;
+    const old = Array.from(holder.children);
+    if ( entry ) {
+      const layer = document.createElement("div");
+      layer.className = "stw-set-layer stw-fresh";
+      const media = createMedia(entry.img);
+      media.classList.add("stw-set-media");
+      layer.append(media);
+      holder.append(layer);
+      const ready = (media instanceof HTMLImageElement) ? media.decode().catch(() => {}) : Promise.resolve();
+      ready.then(() => {
+        if ( element.dataset.setId !== id ) {
+          layer.remove();
+          return;
+        }
+        requestAnimationFrame(() => layer.classList.remove("stw-fresh"));
+        setTimeout(() => old.forEach(o => o.remove()), 1600);
+      });
+      // The title of the place, for a few seconds
+      const title = element.querySelector(".stw-location");
+      title.textContent = entry.name;
+      title.classList.add("show");
+      clearTimeout(locationTimer);
+      locationTimer = setTimeout(() => title.classList.remove("show"), 4500);
+    } else {
+      for ( const layer of old ) layer.classList.add("stw-fresh");
+      setTimeout(() => old.forEach(o => o.remove()), 1600);
+    }
+  }
+  element.dataset.tint = entry ? state.tint : "none";
+  element.classList.toggle("panning", !!entry && state.pan);
+  playBackdropSound(entry?.sound ?? "");
+}
+
+/**
+ * Show a feeling on the portraits of a character (or take it away).
+ * @param {object} options
+ * @param {string} options.actorId
+ * @param {string} options.tokenUuid     The unlinked token ("" = the character)
+ * @param {string} options.symbol        "" takes it away
+ * @param {number|null} options.until    The time it ends, null = until changed
+ */
+export function setStageFeeling({actorId, tokenUuid, symbol, until}) {
+  if ( !drawn ) return;
+  for ( const slot of drawn.slots ) {
+    if ( (slot.actorId !== actorId) || ((slot.tokenUuid || "") !== (tokenUuid || "")) ) continue;
+    const bubble = figures.get(slot.id)?.querySelector(".stw-feel");
+    if ( !bubble ) continue;
+    clearTimeout(bubbleTimers.get(bubble));
+    if ( !symbol ) {
+      bubble.classList.remove("show");
+      continue;
+    }
+    bubble.textContent = symbol;
+    bubble.classList.remove("show");
+    // A new frame restarts the pop
+    requestAnimationFrame(() => bubble.classList.add("show"));
+    if ( until ) bubbleTimers.set(bubble, setTimeout(() => bubble.classList.remove("show"), Math.max(0, until - Date.now())));
+  }
+}
+
+/** The timers which hide the feelings on the stage. */
+const bubbleTimers = new WeakMap();
 
 /**
  * Put a new picture into a portrait, fading it over the old one.
@@ -459,7 +662,7 @@ async function setMedia(figure, src) {
  */
 export function renderStage() {
   const state = getStage();
-  const show = state.active && setting("stageShow") && state.slots.length;
+  const show = state.active && setting("stageShow") && (state.slots.length || state.backdropId);
   const previous = drawn;
   if ( !show ) {
     if ( !overlay ) {
@@ -473,6 +676,7 @@ export function renderStage() {
     }
     overlay.classList.remove("active");
     drawn = null;
+    playBackdropSound("");
     setTimeout(() => {
       if ( !drawn ) overlay?.remove();
     }, 500);
@@ -484,6 +688,7 @@ export function renderStage() {
   drawn = state;
   element.dataset.backdrop = state.backdrop;
   element.classList.toggle("has-speaker", !!state.speaker);
+  applyScenery(element, state);
   const holder = element.querySelector(".stw-actors");
   const ids = new Set(state.slots.map(s => s.id));
   for ( const [id, figure] of figures ) {
@@ -499,7 +704,8 @@ export function renderStage() {
       figure = document.createElement("figure");
       figure.className = "stw-actor entering";
       figure.dataset.slotId = slot.id;
-      figure.innerHTML = '<div class="stw-picture"></div><figcaption class="stw-plate"><span class="stw-plate-name"></span><small class="stw-plate-real"></small></figcaption>';
+      figure.innerHTML = '<div class="stw-picture"></div><span class="stw-feel" aria-hidden="true"></span>'
+        + '<figcaption class="stw-plate"><span class="stw-plate-name"></span><small class="stw-plate-real"></small></figcaption>';
       holder.append(figure);
       figures.set(slot.id, figure);
       requestAnimationFrame(() => requestAnimationFrame(() => figure.classList.remove("entering")));

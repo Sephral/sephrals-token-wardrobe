@@ -5,6 +5,7 @@
  */
 
 import {findOutfit, normalizeExpression, usableOutfits} from "./outfits.mjs";
+import {TINTS} from "./backdrop-logic.mjs";
 
 /**
  * @typedef StageSlot
@@ -15,13 +16,17 @@ import {findOutfit, normalizeExpression, usableOutfits} from "./outfits.mjs";
  * @property {string} img                Image or video shown
  * @property {string|null} outfitId      The outfit shown
  * @property {string} expression         Mood tag of that outfit
- * @property {("left"|"right"|null)} side   Fixed side, null = chosen by the layout
+ * @property {("left"|"right"|"center"|null)} side   Fixed place, null = chosen by the layout (left or right)
+ * @property {number} depth              How far back the portrait stands: 0 front, 1 middle, 2 back (smaller)
  */
 
 /**
  * @typedef StageState
  * @property {boolean} active            Is the stage on the screens?
- * @property {("soft"|"dark"|"none")} backdrop
+ * @property {("soft"|"dark"|"none")} backdrop   The shading over the picture
+ * @property {string|null} backdropId    The backdrop picture of the library behind the portraits
+ * @property {string} tint               The light of the time of day over the backdrop picture (TINTS)
+ * @property {boolean} pan               Pan the backdrop picture slowly
  * @property {string|null} speaker       The id of the speaking portrait
  * @property {StageSlot[]} slots
  */
@@ -32,9 +37,16 @@ export const BACKDROPS = ["soft", "dark", "none"];
 /** The most portraits on one stage. */
 export const MAX_SLOTS = 6;
 
+/** The places a portrait can stand at. */
+export const PLACES = ["left", "center", "right"];
+
+/** The depths of a portrait and the size each one has. */
+export const DEPTH_SCALES = [1, 0.82, 0.66];
+
 /** A stage with nobody on it. */
 export function emptyStage(backdrop = "soft") {
-  return {active: false, backdrop: BACKDROPS.includes(backdrop) ? backdrop : "soft", speaker: null, slots: []};
+  return {active: false, backdrop: BACKDROPS.includes(backdrop) ? backdrop : "soft", backdropId: null, tint: "none",
+    pan: false, speaker: null, slots: []};
 }
 
 /**
@@ -61,13 +73,26 @@ export function normalizeStage(data, makeId) {
       img: text(entry.img),
       outfitId: text(entry.outfitId) || null,
       expression: normalizeExpression(entry.expression),
-      side: ["left", "right"].includes(entry.side) ? entry.side : null
+      side: PLACES.includes(entry.side) ? entry.side : null,
+      depth: normalizeDepth(entry.depth)
     });
     if ( slots.length >= MAX_SLOTS ) break;
   }
   const speaker = slots.some(s => s.id === data?.speaker) ? data.speaker : null;
-  return {active: !!data?.active && slots.length > 0, backdrop: BACKDROPS.includes(data?.backdrop) ? data.backdrop : "soft",
-    speaker, slots};
+  const backdropId = text(data?.backdropId) || null;
+  return {active: !!data?.active && (slots.length > 0 || !!backdropId),
+    backdrop: BACKDROPS.includes(data?.backdrop) ? data.backdrop : "soft", backdropId,
+    tint: TINTS.includes(data?.tint) ? data.tint : "none", pan: !!data?.pan, speaker, slots};
+}
+
+/**
+ * The depth of a portrait: 0, 1 or 2.
+ * @param {*} value
+ * @returns {number}
+ */
+export function normalizeDepth(value) {
+  const depth = Math.round(Number(value));
+  return (Number.isFinite(depth) && (depth >= 0) && (depth < DEPTH_SCALES.length)) ? depth : 0;
 }
 
 /* -------------------------------------------- */
@@ -107,7 +132,8 @@ export function withSlot(state, slot) {
  */
 export function withoutSlot(state, id) {
   const slots = state.slots.filter(s => s.id !== id);
-  return {...state, active: slots.length > 0 && state.active, speaker: (state.speaker === id) ? null : state.speaker, slots};
+  return {...state, active: (slots.length > 0 || !!state.backdropId) && state.active,
+    speaker: (state.speaker === id) ? null : state.speaker, slots};
 }
 
 /**
@@ -169,24 +195,27 @@ export function startOutfit(outfits, ref, wornId) {
 
 /**
  * Where each portrait stands: its side and its place counted from the edge of the screen (0 = outermost). Portraits
- * without a fixed side take the side with fewer portraits, the left one first.
+ * without a fixed side take the side with fewer portraits, the left one first. Portraits in the center stand side by
+ * side around the middle, `of` is how many stand on the same side.
  * @param {Pick<StageSlot, "id"|"side">[]} slots
- * @returns {{id: string, side: ("left"|"right"), pos: number}[]}
+ * @returns {{id: string, side: ("left"|"right"|"center"), pos: number, of: number}[]}
  */
 export function layoutStage(slots) {
-  const count = {left: 0, right: 0};
+  const count = {left: 0, right: 0, center: 0};
   for ( const slot of slots ) if ( slot.side ) count[slot.side]++;
+  const total = {...count};
   const sides = new Map();
   for ( const slot of slots ) {
     if ( slot.side ) continue;
     const side = (count.left <= count.right) ? "left" : "right";
     count[side]++;
+    total[side]++;
     sides.set(slot.id, side);
   }
-  const next = {left: 0, right: 0};
+  const next = {left: 0, right: 0, center: 0};
   return slots.map(slot => {
     const side = slot.side ?? sides.get(slot.id);
-    return {id: slot.id, side, pos: next[side]++};
+    return {id: slot.id, side, pos: next[side]++, of: total[side]};
   });
 }
 

@@ -5,6 +5,7 @@
  */
 
 import {MODULE_ID, setting, t} from "./config.mjs";
+import {feelingsOffered, setFeeling} from "./feelings.mjs";
 import {openPopup} from "./palette.mjs";
 import {canEdit, canWear, getOutfits, resolveTarget, wearableOutfits} from "./store.mjs";
 import {addToStage} from "./stage.mjs";
@@ -57,9 +58,10 @@ export function onRenderActorSheet(app, html) {
   if ( !actor || !root ) return;
   const wearable = canWear(actor);
   const editable = canEdit(actor);
-  // The button is for putting outfits on. Without outfits only those who can create some are shown it
-  if ( !wearable ) return;
-  if ( !editable && !wearableOutfits(actor).length ) return;
+  // The button is for putting outfits on and for feelings. Without outfits only those who can create some are shown it
+  const feels = feelingsOffered(actor);
+  if ( !wearable && !feels ) return;
+  if ( !editable && !wearableOutfits(actor).length && !feels ) return;
   const image = Array.from(root.querySelectorAll(PORTRAIT_SELECTORS)).find(el => el.parentElement);
   if ( !image ) return;
   const host = image.parentElement;
@@ -83,7 +85,8 @@ export function onRenderActorSheet(app, html) {
     openPopup(button, target, {
       wear: id => wear(target, id),
       open: () => openWardrobe(target),
-      stage: () => addToStage(target, {open: true})
+      stage: () => addToStage(target, {open: true}),
+      feel: feeling => setFeeling(target, feeling || null)
     });
   });
   host.append(button);

@@ -4,16 +4,19 @@
  * operated with the keyboard.
  */
 
-import {MODULE_ID, TEMPLATES, addSettingsGear, setting, t} from "./config.mjs";
-import {layoutStage, BACKDROPS, MAX_SLOTS} from "./stage-logic.mjs";
+import {MODULE_ID, TEMPLATES, addSettingsGear, esc, setting, t} from "./config.mjs";
+import {addBackdrops, getBackdrops, removeBackdrop, updateBackdrop} from "./backdrops.mjs";
+import {TINTS} from "./backdrop-logic.mjs";
+import {countFeature} from "./usage.mjs";
+import {layoutStage, BACKDROPS, MAX_SLOTS, PLACES} from "./stage-logic.mjs";
 import {mediaHTML} from "./palette.mjs";
 import {usableOutfits} from "./outfits.mjs";
 import {getOutfits} from "./store.mjs";
 import {EXPRESSION_ICONS, expressionName} from "./wardrobe-app.mjs";
-import {addToStage, flipSide, getStage, hideStage, registerControls, removeFromStage, setBackdrop, setExpression,
-  setSpeaker, slotOutfits, slotTarget} from "./stage.mjs";
+import {addToStage, flipSide, getStage, hideStage, registerControls, removeFromStage, setBackdrop, setDepth, setExpression,
+  setPan, setPlace, setSpeaker, setTint, showBackdrop, slotOutfits, slotTarget, stepBackdrop} from "./stage.mjs";
 
-const {ApplicationV2, HandlebarsApplicationMixin} = foundry.applications.api;
+const {ApplicationV2, HandlebarsApplicationMixin, DialogV2} = foundry.applications.api;
 
 /** The id of the window. */
 const APP_ID = `${MODULE_ID}-stage`;
@@ -40,7 +43,14 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
       select: StageApp.#onSelect,
       addActor: StageApp.#onAddActor,
       addSelected: StageApp.#onAddSelected,
-      closeStage: StageApp.#onClose
+      closeStage: StageApp.#onClose,
+      place: StageApp.#onPlace,
+      depth: StageApp.#onDepth,
+      backdropShow: StageApp.#onBackdropShow,
+      backdropEdit: StageApp.#onBackdropEdit,
+      backdropRemove: StageApp.#onBackdropRemove,
+      backdropAdd: StageApp.#onBackdropAdd,
+      backdropOff: StageApp.#onBackdropOff
     }
   };
 
@@ -69,6 +79,9 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
         speaking: state.speaker === slot.id,
         side: layout.get(slot.id)?.side ?? "left",
         sideLabel: t(`STW.Stage.side.${layout.get(slot.id)?.side ?? "left"}`),
+        places: PLACES.map(place => ({value: place, label: t(`STW.Stage.side.${place}`), on: (layout.get(slot.id)?.side ?? "left") === place})),
+        depthLabel: t(`STW.Stage.depth.${slot.depth}`),
+        depthFar: slot.depth > 0,
         imgHTML: mediaHTML(slot.img),
         real: (real && (real !== slot.name)) ? t("STW.Stage.realName", {name: real}) : "",
         exprLabel: slot.expression ? expressionName(slot.expression) : "",
@@ -100,7 +113,17 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
       withOutfits,
       others,
       hasTokens: !!canvas?.tokens?.controlled?.some(token => token.actor),
-      backdrops: BACKDROPS.map(value => ({value, label: t(`STW.Stage.backdrop.${value}`), selected: value === state.backdrop}))
+      shadings: BACKDROPS.map(value => ({value, label: t(`STW.Stage.backdrop.${value}`), selected: value === state.backdrop})),
+      hasBackdrop: !!state.backdropId,
+      pan: state.pan,
+      tints: TINTS.map(value => ({value, label: t(`STW.Backdrop.tints.${value}`), selected: value === state.tint})),
+      backdrops: getBackdrops().map((backdrop, index) => ({
+        ...backdrop,
+        active: backdrop.id === state.backdropId,
+        thumb: mediaHTML(backdrop.img),
+        audio: !!(backdrop.sound || backdrop.playlist),
+        key: (index < 9) ? index + 1 : ""
+      }))
     };
   }
 
@@ -119,6 +142,8 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const element = this.element;
     element.dataset.stwTheme = setting("theme");
     element.querySelector("select[name=backdrop]")?.addEventListener("change", event => setBackdrop(event.currentTarget.value));
+    element.querySelector("select[name=tint]")?.addEventListener("change", event => setTint(event.currentTarget.value));
+    element.querySelector("input[name=pan]")?.addEventListener("change", event => setPan(event.currentTarget.checked));
     if ( !element.dataset.stwKeys ) {
       element.dataset.stwKeys = "1";
       element.tabIndex = -1;
@@ -189,6 +214,11 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
         setExpression(slot.id, outfits[(((at + step) % outfits.length) + outfits.length) % outfits.length].id);
         break;
       }
+      case "b":
+      case "B":
+        handled();
+        stepBackdrop(event.shiftKey ? -1 : 1);
+        break;
       case "s":
       case "S":
         if ( !slot ) return;
@@ -233,9 +263,19 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   async #onDrop(event) {
     let data = null;
+    const raw = event.dataTransfer?.getData("text/plain") ?? "";
     try {
-      data = JSON.parse(event.dataTransfer?.getData("text/plain") ?? "");
+      data = JSON.parse(raw);
     } catch {
+      data = /\.[a-z0-9]{2,5}(\?.*)?$/i.test(raw.trim()) ? {src: raw.trim()} : null;
+    }
+    // A picture dropped on the backdrops joins the library
+    const src = data?.src ?? data?.path ?? data?.texture?.src;
+    if ( (typeof src === "string") && src && event.target.closest?.(".stw-backdrops") ) {
+      event.preventDefault();
+      event.stopPropagation();
+      const added = await addBackdrops([src]);
+      if ( added.length ) countFeature(MODULE_ID, "backdropAdded");
       return;
     }
     if ( !data?.uuid || !["Actor", "Token"].includes(data.type) ) return;
@@ -322,9 +362,130 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onClose() {
     await hideStage();
   }
+
+  /**
+   * Put a portrait at the left, in the center or at the right.
+   * @this {StageApp}
+   */
+  static #onPlace(event, target) {
+    const id = target.closest("[data-slot-id]")?.dataset.slotId;
+    if ( id ) setPlace(id, target.dataset.place);
+  }
+
+  /**
+   * Put a portrait further back (and around again).
+   * @this {StageApp}
+   */
+  static #onDepth(event, target) {
+    const id = target.closest("[data-slot-id]")?.dataset.slotId;
+    if ( id ) setDepth(id, "next");
+  }
+
+  /**
+   * Show a backdrop of the library.
+   * @this {StageApp}
+   */
+  static #onBackdropShow(event, target) {
+    const id = target.closest("[data-backdrop-id]")?.dataset.backdropId;
+    if ( id ) showBackdrop(id);
+  }
+
+  /**
+   * Take the backdrop picture away.
+   * @this {StageApp}
+   */
+  static #onBackdropOff() {
+    showBackdrop(null);
+  }
+
+  /**
+   * Change a backdrop of the library.
+   * @this {StageApp}
+   */
+  static async #onBackdropEdit(event, target) {
+    const id = target.closest("[data-backdrop-id]")?.dataset.backdropId;
+    const backdrop = getBackdrops().find(b => b.id === id);
+    if ( !backdrop ) return;
+    const changes = await editBackdrop(backdrop);
+    if ( changes ) await updateBackdrop(id, changes);
+  }
+
+  /**
+   * Take a backdrop out of the library.
+   * @this {StageApp}
+   */
+  static async #onBackdropRemove(event, target) {
+    const id = target.closest("[data-backdrop-id]")?.dataset.backdropId;
+    const backdrop = getBackdrops().find(b => b.id === id);
+    if ( !backdrop ) return;
+    const sure = await DialogV2.confirm({
+      window: {title: t("STW.Backdrop.removeTitle", {name: backdrop.name})},
+      content: `<p>${esc(t("STW.Backdrop.removeText", {name: backdrop.name}))}</p>`,
+      rejectClose: false
+    });
+    if ( !sure ) return;
+    if ( getStage().backdropId === id ) await showBackdrop(null);
+    await removeBackdrop(id);
+  }
+
+  /**
+   * Pick a picture and add it to the library.
+   * @this {StageApp}
+   */
+  static #onBackdropAdd() {
+    const FilePicker = foundry.applications.apps.FilePicker.implementation;
+    new FilePicker({
+      type: "imagevideo",
+      callback: async path => {
+        const added = await addBackdrops([path]);
+        if ( added.length ) countFeature(MODULE_ID, "backdropAdded");
+        else ui.notifications.info(t("STW.Backdrop.known"));
+      }
+    }).render({force: true});
+  }
 }
 
 /* -------------------------------------------- */
+
+/**
+ * Let the GM change a backdrop: name, picture, sound, playlist, time of day and panning.
+ * @param {import("./backdrop-logic.mjs").Backdrop} backdrop
+ * @returns {Promise<object|null>}
+ */
+async function editBackdrop(backdrop) {
+  const playlists = game.playlists.contents.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const options = [`<option value="">${esc(t("STW.Backdrop.noPlaylist"))}</option>`,
+    ...playlists.map(p => `<option value="${esc(p.uuid)}" ${(p.uuid === backdrop.playlist) ? "selected" : ""}>${esc(p.name)}</option>`)].join("");
+  const tints = TINTS.map(tint => `<option value="${tint}" ${(tint === backdrop.tint) ? "selected" : ""}>${esc(t(`STW.Backdrop.tints.${tint}`))}</option>`).join("");
+  const content = document.createElement("div");
+  content.innerHTML = `<div class="stw-auto-form stw-backdrop-form">
+    <label class="stw-check">${esc(t("STW.Backdrop.name"))} <input type="text" name="name" value="${esc(backdrop.name)}"></label>
+    <label class="stw-check">${esc(t("STW.Backdrop.picture"))} <file-picker name="img" type="imagevideo" value="${esc(backdrop.img)}"></file-picker></label>
+    <label class="stw-check">${esc(t("STW.Backdrop.sound"))} <file-picker name="sound" type="audio" value="${esc(backdrop.sound)}"></file-picker></label>
+    <label class="stw-check">${esc(t("STW.Backdrop.playlist"))} <select name="playlist">${options}</select></label>
+    <label class="stw-check">${esc(t("STW.Backdrop.tint"))} <select name="tint">${tints}</select></label>
+    <label class="stw-check"><input type="checkbox" name="pan" ${backdrop.pan ? "checked" : ""}> ${esc(t("STW.Backdrop.pan"))}</label>
+    <p class="hint">${esc(t("STW.Backdrop.editHint"))}</p></div>`;
+  const result = await DialogV2.wait({
+    window: {title: t("STW.Backdrop.editTitle", {name: backdrop.name}), icon: "fa-solid fa-image"},
+    classes: ["stw-app", "stw-auto-dialog"],
+    position: {width: 520},
+    content,
+    buttons: [{
+      action: "save", label: "STW.Auto.save", icon: "fa-solid fa-check", default: true,
+      callback: (event, button) => {
+        const form = button.form.elements;
+        return {name: form.name.value, img: form.img.value || backdrop.img, sound: form.sound.value, playlist: form.playlist.value,
+          tint: form.tint.value, pan: form.pan.checked};
+      }
+    }, {action: "cancel", label: "STW.Auto.cancel", icon: "fa-solid fa-xmark"}],
+    render: (event, dialog) => {
+      dialog.element.dataset.stwTheme = setting("theme");
+    },
+    rejectClose: false
+  });
+  return (result && (typeof result === "object")) ? result : null;
+}
 
 /**
  * Open the stage controls, or bring them to the front.

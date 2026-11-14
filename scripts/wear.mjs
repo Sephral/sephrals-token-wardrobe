@@ -52,7 +52,7 @@ function scaleOf(texture) {
  * @param {import("./outfits.mjs").Outfit} outfit
  * @returns {Record<string, *>}
  */
-function lookData(source, outfit) {
+export function lookData(source, outfit) {
   const data = {};
   if ( outfit.token ) {
     data["texture.src"] = outfit.token;
@@ -110,13 +110,14 @@ function prefixed(prefix, data) {
  * The flags a wearing sets on the character: what it has on, and for the automation what was chosen by hand.
  * @param {import("./outfits.mjs").Outfit} outfit
  * @param {object} options
- * @param {string} options.source                  "user", "place" (a Region or scene asked for it) or "auto"
+ * @param {string} options.source                  "user", "place" (a Region or scene asked for it), "variety" (a
+ *   random look), "feeling" (a mood for a while, the chosen look comes back) or "auto"
  * @param {{manual?: (string|null), autoId?: (string|null)}} [options.memory]
  * @returns {Record<string, *>}   Paths relative to the actor
  */
 function flagData(outfit, {source, memory}) {
   const data = {[`flags.${MODULE_ID}.current`]: outfit?.id ?? null};
-  if ( (source === "user") || (source === "place") ) data[`flags.${MODULE_ID}.manual`] = outfit.id;
+  if ( (source === "user") || (source === "place") || (source === "variety") ) data[`flags.${MODULE_ID}.manual`] = outfit.id;
   else if ( memory ) {
     if ( "manual" in memory ) data[`flags.${MODULE_ID}.manual`] = memory.manual;
     if ( "autoId" in memory ) data[`flags.${MODULE_ID}.autoId`] = memory.autoId;
@@ -200,12 +201,15 @@ export function syncLinkedTokens(base, outfitId) {
  * @param {Actor|TokenDocument|Token|string} target   An actor, a token or a UUID
  * @param {string|number} ref                         Id, name or position (from 1) of the outfit
  * @param {object} [options]
- * @param {"user"|"place"|"auto"} [options.source="user"]   "auto" comes from the automation, "place" from a Region or scene
+ * @param {"user"|"place"|"auto"|"variety"|"feeling"} [options.source="user"]   "auto" comes from the automation,
+ *   "place" from a Region or scene, "variety" from a random look, "feeling" from a mood of the player
  * @param {{manual?: (string|null), autoId?: (string|null)}} [options.memory]   Automation bookkeeping, stored along
  * @param {boolean} [options.notify=true]             Tell the user when it cannot be done
+ * @param {boolean|null} [options.mirror=null]        Mirror the token image of an unlinked token (null = as the outfit says)
+ * @param {string|null} [options.back]                A feeling remembers the outfit to come back to (null = forget it)
  * @returns {Promise<{actor: Actor, token: (TokenDocument|null), outfit: object}|null>}
  */
-export async function wear(target, ref, {source="user", memory, notify=true}={}) {
+export async function wear(target, ref, {source="user", memory, notify=true, mirror=null, back}={}) {
   const resolved = resolveTarget(target);
   if ( !resolved ) {
     if ( notify ) ui.notifications.warn(t("STW.Notify.noTarget"));
@@ -221,7 +225,7 @@ export async function wear(target, ref, {source="user", memory, notify=true}={})
     if ( notify ) ui.notifications.warn(t("STW.Notify.noOutfit", {name: actor.name, outfit: String(ref ?? "")}));
     return null;
   }
-  const result = await enqueue(actor.uuid, () => apply(resolved, outfit, {source, memory}));
+  const result = await enqueue(actor.uuid, () => apply(resolved, outfit, {source, memory, mirror, back}));
   if ( source === "user" ) countFeature(MODULE_ID, "worn");
   Hooks.callAll(WORN_HOOK, {actor: base, token, outfit, source});
   return result;
@@ -234,12 +238,17 @@ export async function wear(target, ref, {source="user", memory, notify=true}={})
  * @param {object} options
  * @returns {Promise<{actor: Actor, token: (TokenDocument|null), outfit: object}>}
  */
-async function apply({base, actor, token}, outfit, {source, memory}) {
+async function apply({base, actor, token}, outfit, {source, memory, mirror, back}) {
   const flags = flagData(outfit, {source, memory});
+  // A feeling remembers where to come back to, any other change of look ends the feeling
+  const backPath = `flags.${MODULE_ID}.feelBack`;
+  if ( source === "feeling" ) {
+    if ( back !== undefined ) flags[backPath] = back;
+  } else if ( actor.getFlag(MODULE_ID, "feelBack") ) flags[backPath] = null;
 
   // An unlinked token is dressed on its own: image and portrait in one update
   if ( token && !token.actorLink ) {
-    const data = lookData(token._source, outfit);
+    const data = lookData(token._source, (mirror === null) ? outfit : {...outfit, mirror});
     if ( outfit.portrait ) data["delta.img"] = outfit.portrait;
     Object.assign(data, prefixed("delta.", flags));
     const changes = onlyChanges(token._source, data);

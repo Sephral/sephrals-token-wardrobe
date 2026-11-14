@@ -4,6 +4,8 @@
  * Node tests.
  */
 
+import {gearMatches, normalizeGear} from "./gear-logic.mjs";
+
 /**
  * @typedef Outfit
  * @property {string} id            Stable id
@@ -14,6 +16,7 @@
  * @property {boolean} mirror       Mirror the token image
  * @property {string} expression    Mood tag for the conversation stage ("" = none), one of EXPRESSIONS
  * @property {string} disguise      Name players see on the token and the stage while the outfit is worn ("" = none)
+ * @property {boolean} variety      Part of the random looks of unlinked tokens ("Every figure looks different")
  * @property {OutfitAuto} auto      When the outfit puts itself on
  */
 
@@ -22,11 +25,13 @@
  * @property {boolean} combat       While the character fights (a started combat)
  * @property {number|null} hp       Below this percentage of the hit points, null = off
  * @property {string[]} status      While one of these status effects is active
- * @property {string[]} armor       While armor of one of these kinds is equipped (ARMOR_TYPES, dnd5e only)
+ * @property {string[]} armor       While armor of one of these kinds is equipped (ARMOR_TYPES, dnd5e and PF2e)
+ * @property {import("./gear-logic.mjs").GearLink[]} gear   While one of these items is equipped
  */
 
 /** The moods an outfit can be tagged with for the conversation stage. */
-export const EXPRESSIONS = ["neutral", "friendly", "happy", "angry", "hurt", "sad", "afraid", "surprised", "mocking"];
+export const EXPRESSIONS = ["neutral", "friendly", "happy", "angry", "hurt", "sad", "afraid", "surprised", "mocking",
+  "worried", "thoughtful"];
 
 /** The kinds of armor an outfit can follow (the dnd5e armor types, "none" = no armor on). */
 export const ARMOR_TYPES = ["none", "light", "medium", "heavy", "shield"];
@@ -153,7 +158,8 @@ export function normalizeAuto(data) {
     combat: !!data?.combat,
     hp: percentOrNull(data?.hp),
     status: [...new Set(status.filter(s => (typeof s === "string") && s))],
-    armor: ARMOR_TYPES.filter(type => armor.includes(type))
+    armor: ARMOR_TYPES.filter(type => armor.includes(type)),
+    gear: normalizeGear(data?.gear)
   };
 }
 
@@ -164,7 +170,8 @@ export function normalizeAuto(data) {
  */
 export function hasAuto(outfit) {
   const auto = outfit?.auto;
-  return !!auto && (auto.combat || (auto.hp !== null) || (auto.status.length > 0) || (auto.armor.length > 0));
+  return !!auto && (auto.combat || (auto.hp !== null) || (auto.status.length > 0) || (auto.armor.length > 0)
+    || (auto.gear.length > 0));
 }
 
 /**
@@ -189,6 +196,7 @@ export function normalizeOutfit(data, makeId) {
     mirror: !!data.mirror,
     expression: normalizeExpression(data.expression),
     disguise: text(data.disguise),
+    variety: !!data.variety,
     auto: normalizeAuto(data.auto)
   };
 }
@@ -483,7 +491,7 @@ export function barPercent(data) {
 /**
  * Does the state of a character call for an outfit?
  * @param {Outfit} outfit
- * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>, armor?: (Iterable<string>|null)}} state
+ * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>, armor?: (Iterable<string>|null), gear?: (Iterable<string>|null)}} state
  * @returns {boolean}
  */
 export function autoMatches(outfit, state) {
@@ -499,6 +507,7 @@ export function autoMatches(outfit, state) {
     const worn = new Set(state.armor);
     if ( auto.armor.some(type => worn.has(type)) ) return true;
   }
+  if ( auto.gear.length && gearMatches(auto.gear, state.gear) ) return true;
   return false;
 }
 
@@ -553,7 +562,7 @@ export function stageName(actorName, shown, worn) {
  * is unchanged nothing happens, so a manual choice stays until the situation changes. When the situation ends, the
  * outfit the user chose by hand comes back.
  * @param {Outfit[]} outfits
- * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>, armor?: (Iterable<string>|null)}} state
+ * @param {{inCombat: boolean, hpPercent: (number|null), statuses: Iterable<string>, armor?: (Iterable<string>|null), gear?: (Iterable<string>|null)}} state
  * @param {{manual: (string|null), current: (string|null), autoId: (string|null)}} memory
  * @returns {{change: false}|{change: true, wear: (string|null), autoId: (string|null), manual: (string|null)}}
  */

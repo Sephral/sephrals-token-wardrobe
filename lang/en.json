@@ -59,8 +59,8 @@
         "hint": "Outfits with an automation put themselves on at the start of a fight, below a share of hit points or while a status is active. Only the active GM runs the rules."
       },
       "stageBackdrop": {
-        "name": "Backdrop of the conversation stage",
-        "hint": "How the screen looks behind the portraits when the GM opens a stage. The GM can change it for the running stage."
+        "name": "Shading of the conversation stage",
+        "hint": "How dark the screen is behind the portraits when the GM opens a stage. The GM can change it for the running stage."
       },
       "stageWear": {
         "name": "Stage expressions put the outfit on",
@@ -76,6 +76,18 @@
         "small": "Small",
         "normal": "Normal",
         "large": "Large"
+      },
+      "stageSound": {
+        "name": "Backdrop sounds",
+        "hint": "Play the ambient sound of a backdrop on this device. This device only."
+      },
+      "feelings": {
+        "name": "Players show feelings",
+        "hint": "Players who own a character can show a feeling over the token and on the stage. An outfit with a matching mood goes on if the player may put on outfits."
+      },
+      "feelingSeconds": {
+        "name": "How long a feeling lasts",
+        "hint": "Seconds a feeling stays over the token before the look from before comes back. 0 keeps it until it is changed."
       }
     },
     "gear": "Settings",
@@ -107,7 +119,12 @@
       "Stage": "The setting of the conversation stage is missing.",
       "Behavior": "The Region behavior Put on outfit is not registered.",
       "StageScreen": "The screen elements for the conversation stage are missing.",
-      "Nameplate": "Foundry does not draw token names the way the module expects."
+      "Nameplate": "Foundry does not draw token names the way the module expects.",
+      "VarietyLogic": "The rules for random looks do not work.",
+      "BackdropLogic": "The rules for backdrops do not work.",
+      "FeelingLogic": "The rules for feelings do not work.",
+      "GearLogic": "The rules for equipment as trigger do not work.",
+      "FeelingScreen": "Foundry's drawing or sound functions for feelings and backdrops are missing."
     },
     "DEBUG": {
       "Title": "Debug file",
@@ -180,7 +197,9 @@
       "disguise": "Disguise name",
       "disguiseHint": "Players see this name on the token and the stage while the outfit is worn. Empty: the real name.",
       "expression": "Mood",
-      "expressionHint": "Mood of this outfit for the conversation stage"
+      "expressionHint": "Mood of this outfit for the conversation stage",
+      "variety": "Random look",
+      "varietyHint": "This outfit can be picked at random when unlinked tokens of this character are placed"
     },
     "Quick": {
       "street": "Street clothes",
@@ -207,7 +226,8 @@
         "medium": "Medium armor",
         "heavy": "Heavy armor",
         "shield": "Shield"
-      }
+      },
+      "whileGear": "while {gear} is equipped"
     },
     "Suggest": {
       "title": "Variants for {name}",
@@ -233,7 +253,9 @@
       "previousOutfit": "Previous outfit of the selected tokens",
       "openWardrobe": "Open the wardrobe of the selected token",
       "openStage": "Open the conversation stage",
-      "closeStage": "Close the conversation stage for all"
+      "closeStage": "Close the conversation stage for all",
+      "nextBackdrop": "Next backdrop of the stage",
+      "previousBackdrop": "Previous backdrop of the stage"
     },
     "Notify": {
       "noTarget": "No character to dress.",
@@ -253,7 +275,9 @@
       "sad": "Sad",
       "afraid": "Afraid",
       "surprised": "Surprised",
-      "mocking": "Mocking"
+      "mocking": "Mocking",
+      "worried": "Worried",
+      "thoughtful": "Thoughtful"
     },
     "Stage": {
       "title": "Conversation stage",
@@ -269,10 +293,11 @@
       "offStage": "The stage is closed",
       "side": {
         "left": "Left",
-        "right": "Right"
+        "right": "Right",
+        "center": "Center"
       },
-      "backdropLabel": "Backdrop",
-      "backdropHint": "The look of the screen behind the portraits",
+      "backdropLabel": "Shading",
+      "backdropHint": "How dark the screen is behind the portraits",
       "backdrop": {
         "soft": "Soft",
         "dark": "Dark",
@@ -292,7 +317,14 @@
       "flip": "Other side",
       "remove": "Take off the stage",
       "noOutfits": "This character has no outfits, so the picture of the character stays. Add outfits in the wardrobe to switch expressions.",
-      "keys": "Keys: left and right choose a portrait, up and down or 1 to 9 pick an outfit, S marks the speaker, F changes the side, Delete takes it off the stage."
+      "keys": "Keys: left and right choose a portrait, up and down or 1 to 9 pick an outfit, S marks the speaker, F changes the side, B shows the next backdrop (Shift+B the one before), Delete takes it off the stage.",
+      "depth": {
+        "0": "Front",
+        "1": "Middle",
+        "2": "Back"
+      },
+      "depthHint": "Further back",
+      "placeHint": "Place on the stage"
     },
     "BEHAVIOR": {
       "label": "Put on outfit",
@@ -318,6 +350,84 @@
       "outfitHint": "The name of an outfit, for example Street clothes. When the scene is activated, the tokens on it put that outfit on. So do tokens which are added while it is active.",
       "leave": "When the scene ends",
       "leaveHint": "Keep the outfit or give the tokens their previous outfit back when another scene is activated."
+    },
+    "Variety": {
+      "button": "Every figure different",
+      "hint": "Unlinked tokens of this character get a random outfit when they are placed",
+      "title": "Every figure looks different: {name}",
+      "intro": "When you place unlinked tokens of this character, for example by dragging it onto the scene several times or with a saved encounter, each token gets a random outfit. Five bandits do not look alike.",
+      "mode": "Take the looks from",
+      "modes": {
+        "off": "Off",
+        "marked": "The outfits marked with the dice",
+        "all": "All outfits"
+      },
+      "mirror": "Also mirror the token image at random",
+      "outro": "Tokens placed one after the other show every look before one repeats. In the token HUD the dice button rolls a new look for a token.",
+      "reroll": "Roll a new look",
+      "noReroll": "This token cannot roll a new look. Switch on Every figure looks different for the character first."
+    },
+    "Backdrop": {
+      "title": "Backdrops",
+      "add": "Add backdrop",
+      "addHint": "Choose a wide picture or a video for the library",
+      "off": "No picture",
+      "offHint": "Take the backdrop picture away",
+      "tint": "Time of day",
+      "tintHint": "A light over the backdrop picture",
+      "tints": {
+        "none": "Plain",
+        "dawn": "Dawn",
+        "dusk": "Dusk",
+        "night": "Night"
+      },
+      "pan": "Slow pan",
+      "panHint": "Move the picture slowly across the screen",
+      "edit": "Change backdrop",
+      "remove": "Remove from the library",
+      "removeTitle": "Remove {name}",
+      "removeText": "Remove {name} from the library of backdrops? The picture file stays.",
+      "editTitle": "Backdrop: {name}",
+      "name": "Name",
+      "picture": "Picture",
+      "sound": "Ambient sound",
+      "playlist": "Playlist",
+      "noPlaylist": "No playlist",
+      "editHint": "The sound plays on every screen while the backdrop is up. A playlist is started by the GM who switches to the backdrop.",
+      "empty": "No backdrops yet. Add a wide picture, for example a tavern or a forest road, or drop a picture here.",
+      "none": "There are no backdrops in the library yet.",
+      "known": "That picture is in the library already.",
+      "unknown": "There is no backdrop {name}."
+    },
+    "Feeling": {
+      "title": "Feeling",
+      "clear": "No feeling",
+      "off": "The GM switched feelings off.",
+      "noRight": "You may not show a feeling for {name}.",
+      "happy": "Happy",
+      "angry": "Angry",
+      "worried": "Worried",
+      "sad": "Sad",
+      "surprised": "Surprised",
+      "thoughtful": "Thoughtful",
+      "key": {
+        "happy": "Feeling: happy",
+        "angry": "Feeling: angry",
+        "worried": "Feeling: worried",
+        "sad": "Feeling: sad",
+        "surprised": "Feeling: surprised",
+        "thoughtful": "Feeling: thoughtful",
+        "clear": "Feeling: take it away"
+      }
+    },
+    "Gear": {
+      "title": "While one of these items is equipped",
+      "add": "Add by name",
+      "addPlaceholder": "Plate armor, Cloak of the north",
+      "hint": "Drop an item on the outfit card to link it, or type its name. The outfit goes on when the character equips the item and the look comes back when it is unequipped.",
+      "dropOnCard": "Drop the item on the card of an outfit.",
+      "linked": "{item} is linked to {outfit}. The outfit goes on while it is equipped.",
+      "known": "{item} is linked to {outfit} already."
     }
   }
 }

@@ -30,7 +30,10 @@ export const SETTINGS = {
   stageWear: {type: Boolean, default: false},
   stageShow: {type: Boolean, default: true, scope: "client", onChange: "stage"},
   stageScale: {type: String, default: "normal", scope: "client", onChange: "stage", choices: {
-    small: "STW.SETTINGS.stageScale.small", normal: "STW.SETTINGS.stageScale.normal", large: "STW.SETTINGS.stageScale.large"}}
+    small: "STW.SETTINGS.stageScale.small", normal: "STW.SETTINGS.stageScale.normal", large: "STW.SETTINGS.stageScale.large"}},
+  stageSound: {type: Boolean, default: true, scope: "client", onChange: "stage"},
+  feelings: {type: Boolean, default: true, onChange: "redraw"},
+  feelingSeconds: {type: Number, default: 30, range: {min: 0, max: 120, step: 5}}
 };
 
 /**
@@ -48,6 +51,7 @@ export function registerSettings(handlers) {
       config: true,
       type: def.type,
       choices: def.choices,
+      range: def.range,
       default: def.default,
       onChange: def.onChange ? value => handlers[def.onChange]?.(value) : undefined
     });
@@ -55,6 +59,9 @@ export function registerSettings(handlers) {
   game.settings.register(MODULE_ID, "acknowledgedVersions", {scope: "client", config: false, type: String, default: ""});
   // The conversation stage, written by the GM, read by every client
   game.settings.register(MODULE_ID, "stage", {scope: "world", config: false, type: Object, default: {},
+    onChange: () => handlers.stage?.()});
+  // The backdrops of the stage, written by the GM
+  game.settings.register(MODULE_ID, "backdrops", {scope: "world", config: false, type: Object, default: {items: []},
     onChange: () => handlers.stage?.()});
   game.settings.registerMenu(MODULE_ID, "wardrobe", {
     name: "STW.Window.menuTitle",

@@ -1,5 +1,7 @@
 import {MODULE_ID, TESTED_VERSIONS, setting, t} from "./config.mjs";
 import {registerAutomation} from "./automation.mjs";
+import {addBackdrops, getBackdrops, removeBackdrop, updateBackdrop} from "./backdrops.mjs";
+import {registerFeelingKeys, setFeeling, startFeelings} from "./feelings.mjs";
 import {registerDebug} from "./debug.mjs";
 import {saveDebugFile} from "./debug-file.mjs";
 import {onCloseTokenHUD, onRenderTokenHUD, refreshTokenHUD} from "./hud.mjs";
@@ -13,9 +15,10 @@ import {noticeNewVersions, runSelfTest} from "./selftest.mjs";
 import {changeLanguage, registerSettings} from "./settings.mjs";
 import {onActorContextOptions, onRenderActorSheet, onSheetHeaderButtons, onSheetHeaderControls} from "./sheet.mjs";
 import {openStageControls} from "./stage-app.mjs";
-import {addToStage, flipSide, getStage, hideStage, removeFromStage, renderStage, setBackdrop,
-  setExpression, setSpeaker, showStage, startStage} from "./stage.mjs";
+import {addToStage, flipSide, getStage, hideStage, removeFromStage, renderStage, setBackdrop, setDepth, setExpression,
+  setPan, setPlace, setSpeaker, setTint, showBackdrop, showStage, stageTarget, startStage, stepBackdrop} from "./stage.mjs";
 import {registerUsage} from "./usage.mjs";
+import {canReroll, getVariety, onPreCreateToken, rerollLook, saveVariety} from "./variety.mjs";
 import {openWardrobe, refreshWardrobes} from "./wardrobe-app.mjs";
 import {step, stepSelected, syncLinkedTokens, wear} from "./wear.mjs";
 
@@ -56,11 +59,14 @@ Hooks.once("init", () => {
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
     features: ["worn", "hudWear", "sheetPalette", "windowOpened", "outfitsAdded", "uploaded", "copied", "folderImport",
-      "suggest", "wildcard", "quickStart", "autoSet", "autoWorn", "keyStep", "stageShown", "stageExpression", "placeWorn"],
+      "suggest", "wildcard", "quickStart", "autoSet", "autoWorn", "keyStep", "stageShown", "stageExpression", "placeWorn",
+      "varietySet", "varietyPlaced", "varietyReroll", "backdropAdded", "backdropShown", "backdropOptions", "stagePlace",
+      "feelingShown", "feelingOutfit", "gearLinked", "gearWorn"],
     settings: ["theme", "sheetButton", "hudButton", "playersWear", "playersEdit", "allScenes", "transition", "automation",
-      "stageBackdrop", "stageWear", "stageShow", "stageScale"]
+      "stageBackdrop", "stageWear", "stageShow", "stageScale", "stageSound", "feelings", "feelingSeconds"]
   });
   registerKeys();
+  registerFeelingKeys();
   registerDebug();
   Hooks.on("renderActorSheet", onRenderActorSheet);
   Hooks.on("renderActorSheetV2", onRenderActorSheet);
@@ -69,6 +75,7 @@ Hooks.once("init", () => {
   Hooks.on("getActorContextOptions", onActorContextOptions);
   Hooks.on("renderSceneConfig", onRenderSceneConfig);
   Hooks.on("refreshToken", onRefreshToken);
+  Hooks.on("preCreateToken", onPreCreateToken);
   Hooks.on("renderTokenHUD", onRenderTokenHUD);
   Hooks.on("closeTokenHUD", onCloseTokenHUD);
   for ( const event of ["updateActor", "updateToken", "createToken", "deleteToken"] ) {
@@ -117,9 +124,46 @@ Hooks.once("init", () => {
       speak: target => setSpeaker(target ?? null),
       flip: flipSide,
       backdrop: setBackdrop,
+      /** Put a portrait at "left", "center" or "right" (actor, token or portrait id, place). */
+      place: setPlace,
+      /** Put a portrait further back: 0 front, 1 middle, 2 back (actor, token or portrait id, depth). */
+      depth: setDepth,
       open: openStageControls,
       state: () => foundry.utils.deepClone(getStage())
     },
+    /**
+     * The backdrops of the stage (GM): a wide picture behind the portraits. `list()` is the library, `add(paths)` adds
+     * pictures, `update(id, changes)` changes one (name, img, sound, playlist, tint, pan), `remove(id)`, `show(ref)`
+     * shows one by id, name or position (null takes the picture away), `next()` and `previous()` step through the
+     * library, `tint("none"|"dawn"|"dusk"|"night")` sets the light of the time of day, `pan(true)` pans the picture.
+     */
+    backdrops: {
+      list: () => foundry.utils.deepClone(getBackdrops()),
+      add: addBackdrops,
+      update: updateBackdrop,
+      remove: removeBackdrop,
+      show: showBackdrop,
+      next: () => stepBackdrop(1),
+      previous: () => stepBackdrop(-1),
+      tint: setTint,
+      pan: setPan
+    },
+    /**
+     * Every figure looks different: `get(actor)` and `set(actor, {mode: "off"|"marked"|"all", mirror})` read and
+     * write the setting of a character, `reroll(token)` rolls a new look for an unlinked token, `canReroll(token)`.
+     */
+    variety: {
+      get: target => foundry.utils.deepClone(getVariety(stageTarget(target)?.base)),
+      set: (target, config) => saveVariety(stageTarget(target).base, config),
+      reroll: rerollLook,
+      canReroll
+    },
+    /**
+     * Show a feeling for a character or token (an actor, a token, a UUID): "happy", "angry", "worried", "sad",
+     * "surprised" or "thoughtful", null takes it away. The symbol shows on every screen and an outfit with that mood goes on
+     * for a while (setting), the look from before comes back.
+     */
+    feel: setFeeling,
     /** Check the module (GM). */
     runSelfTest,
     /** Save the debug file of Sephral's modules (GM). */
@@ -161,6 +205,7 @@ Hooks.once("ready", async () => {
   registerAutomation();
   registerPlaces();
   startStage();
+  startFeelings();
   noticeNewVersions();
 });
 
@@ -194,6 +239,24 @@ function registerKeys() {
     restricted: true,
     onDown: () => {
       hideStage();
+      return true;
+    }
+  });
+  game.keybindings.register(MODULE_ID, "nextBackdrop", {
+    name: "STW.Keys.nextBackdrop",
+    editable: [],
+    restricted: true,
+    onDown: () => {
+      stepBackdrop(1);
+      return true;
+    }
+  });
+  game.keybindings.register(MODULE_ID, "previousBackdrop", {
+    name: "STW.Keys.previousBackdrop",
+    editable: [],
+    restricted: true,
+    onDown: () => {
+      stepBackdrop(-1);
       return true;
     }
   });

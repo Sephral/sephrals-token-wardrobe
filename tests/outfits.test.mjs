@@ -15,7 +15,7 @@ test("normalizeOutfit fills the defaults and keeps videos out of the portrait", 
   assert.equal(o.token, "a/b.webm");
   assert.equal(o.scale, 1.5);
   assert.equal(o.mirror, true);
-  assert.deepEqual(o.auto, {combat: false, hp: null, status: [], armor: []});
+  assert.deepEqual(o.auto, {combat: false, hp: null, status: [], armor: [], gear: []});
   assert.ok(o.id);
 });
 
@@ -139,7 +139,7 @@ const state = (extra={}) => ({inCombat: false, hpPercent: 100, statuses: [], ...
 
 test("normalizeAuto and hasAuto", () => {
   assert.deepEqual(normalizeAuto({combat: 1, hp: "40", status: ["prone", "prone", "", 5]}),
-    {combat: true, hp: 40, status: ["prone"], armor: []});
+    {combat: true, hp: 40, status: ["prone"], armor: [], gear: []});
   assert.equal(normalizeAuto({hp: 0}).hp, null);
   assert.equal(normalizeAuto({hp: 250}).hp, 100);
   assert.equal(hasAuto(outfit("A")), false);

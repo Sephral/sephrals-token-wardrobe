@@ -59,8 +59,8 @@
         "hint": "Outfits mit Automatik ziehen sich selbst an: beim Kampfbeginn, unter einem Anteil der Lebenspunkte oder solange ein Zustand aktiv ist. Nur der aktive SL führt die Regeln aus."
       },
       "stageBackdrop": {
-        "name": "Hintergrund der Gesprächsbühne",
-        "hint": "So sieht der Bildschirm hinter den Porträts aus, wenn der SL eine Bühne öffnet. Der SL kann ihn für die laufende Bühne ändern."
+        "name": "Abdunklung der Gesprächsbühne",
+        "hint": "Wie dunkel der Bildschirm hinter den Porträts ist, wenn der SL eine Bühne öffnet. Der SL kann sie für die laufende Bühne ändern."
       },
       "stageWear": {
         "name": "Bühnenausdruck zieht das Outfit an",
@@ -76,6 +76,18 @@
         "small": "Klein",
         "normal": "Normal",
         "large": "Groß"
+      },
+      "stageSound": {
+        "name": "Kulissengeräusche",
+        "hint": "Spielt das Umgebungsgeräusch einer Kulisse auf diesem Gerät ab. Gilt nur für dieses Gerät."
+      },
+      "feelings": {
+        "name": "Spieler zeigen Gefühle",
+        "hint": "Spieler, denen eine Figur gehört, können ein Gefühl über dem Token und auf der Bühne zeigen. Ein Outfit mit passender Stimmung wird angezogen, wenn der Spieler Outfits anziehen darf."
+      },
+      "feelingSeconds": {
+        "name": "Wie lange ein Gefühl bleibt",
+        "hint": "Sekunden, die ein Gefühl über dem Token bleibt, bevor das vorherige Aussehen zurückkommt. 0 behält es, bis es geändert wird."
       }
     },
     "gear": "Einstellungen",
@@ -107,7 +119,12 @@
       "Stage": "Die Einstellung der Gesprächsbühne fehlt.",
       "Behavior": "Das Regionsverhalten Outfit anziehen ist nicht angemeldet.",
       "StageScreen": "Die Bildschirmelemente für die Gesprächsbühne fehlen.",
-      "Nameplate": "Foundry zeichnet die Tokennamen nicht so, wie das Modul es erwartet."
+      "Nameplate": "Foundry zeichnet die Tokennamen nicht so, wie das Modul es erwartet.",
+      "VarietyLogic": "Die Regeln für Zufallslooks funktionieren nicht.",
+      "BackdropLogic": "Die Regeln für Kulissen funktionieren nicht.",
+      "FeelingLogic": "Die Regeln für Gefühle funktionieren nicht.",
+      "GearLogic": "Die Regeln für Ausrüstung als Auslöser funktionieren nicht.",
+      "FeelingScreen": "Die Zeichen- oder Tonfunktionen von Foundry für Gefühle und Kulissen fehlen."
     },
     "DEBUG": {
       "Title": "Debug-Datei",
@@ -180,7 +197,9 @@
       "disguise": "Verkleidungsname",
       "disguiseHint": "Die Spieler sehen diesen Namen am Token und auf der Bühne, solange das Outfit getragen wird. Leer: der echte Name.",
       "expression": "Stimmung",
-      "expressionHint": "Stimmung dieses Outfits für die Gesprächsbühne"
+      "expressionHint": "Stimmung dieses Outfits für die Gesprächsbühne",
+      "variety": "Zufallslook",
+      "varietyHint": "Dieses Outfit kann zufällig gewählt werden, wenn nicht verknüpfte Token dieser Figur platziert werden"
     },
     "Quick": {
       "street": "Straßenkleidung",
@@ -207,7 +226,8 @@
         "medium": "Mittlere Rüstung",
         "heavy": "Schwere Rüstung",
         "shield": "Schild"
-      }
+      },
+      "whileGear": "solange {gear} angelegt ist"
     },
     "Suggest": {
       "title": "Varianten für {name}",
@@ -233,7 +253,9 @@
       "previousOutfit": "Voriges Outfit der gewählten Token",
       "openWardrobe": "Kleiderschrank des gewählten Tokens öffnen",
       "openStage": "Gesprächsbühne öffnen",
-      "closeStage": "Gesprächsbühne für alle schließen"
+      "closeStage": "Gesprächsbühne für alle schließen",
+      "nextBackdrop": "Nächste Kulisse der Bühne",
+      "previousBackdrop": "Vorherige Kulisse der Bühne"
     },
     "Notify": {
       "noTarget": "Keine Figur zum Anziehen.",
@@ -253,7 +275,9 @@
       "sad": "Traurig",
       "afraid": "Ängstlich",
       "surprised": "Überrascht",
-      "mocking": "Spöttisch"
+      "mocking": "Spöttisch",
+      "worried": "Besorgt",
+      "thoughtful": "Nachdenklich"
     },
     "Stage": {
       "title": "Gesprächsbühne",
@@ -269,10 +293,11 @@
       "offStage": "Die Bühne ist geschlossen",
       "side": {
         "left": "Links",
-        "right": "Rechts"
+        "right": "Rechts",
+        "center": "Mitte"
       },
-      "backdropLabel": "Hintergrund",
-      "backdropHint": "So sieht der Bildschirm hinter den Porträts aus",
+      "backdropLabel": "Abdunklung",
+      "backdropHint": "Wie dunkel der Bildschirm hinter den Porträts ist",
       "backdrop": {
         "soft": "Sanft",
         "dark": "Dunkel",
@@ -292,7 +317,14 @@
       "flip": "Andere Seite",
       "remove": "Von der Bühne nehmen",
       "noOutfits": "Diese Figur hat keine Outfits, deshalb bleibt ihr Bild. Leg im Kleiderschrank Outfits an, um den Ausdruck zu wechseln.",
-      "keys": "Tasten: Links und Rechts wählen ein Porträt, Hoch und Runter oder 1 bis 9 wählen ein Outfit, S markiert, wer spricht, F wechselt die Seite, Entf nimmt es von der Bühne."
+      "keys": "Tasten: Links und Rechts wählen ein Porträt, Hoch und Runter oder 1 bis 9 wählen ein Outfit, S markiert, wer spricht, F wechselt die Seite, B zeigt die nächste Kulisse (Umschalt+B die vorherige), Entf nimmt es von der Bühne.",
+      "depth": {
+        "0": "Vorn",
+        "1": "Mitte",
+        "2": "Hinten"
+      },
+      "depthHint": "Weiter nach hinten",
+      "placeHint": "Platz auf der Bühne"
     },
     "BEHAVIOR": {
       "label": "Outfit anziehen",
@@ -318,6 +350,84 @@
       "outfitHint": "Der Name eines Outfits, zum Beispiel Straßenkleidung. Wird die Szene aktiviert, ziehen die Token darauf dieses Outfit an. Das tun auch Token, die hinzukommen, solange sie aktiv ist.",
       "leave": "Wenn die Szene endet",
       "leaveHint": "Das Outfit behalten oder den Token ihr vorheriges Outfit zurückgeben, wenn eine andere Szene aktiviert wird."
+    },
+    "Variety": {
+      "button": "Jede Figur anders",
+      "hint": "Nicht verknüpfte Token dieser Figur bekommen beim Platzieren ein zufälliges Outfit",
+      "title": "Jede Figur sieht anders aus: {name}",
+      "intro": "Wenn du nicht verknüpfte Token dieser Figur platzierst, zum Beispiel indem du sie mehrmals auf die Szene ziehst oder mit einer gespeicherten Begegnung, bekommt jeder Token ein zufälliges Outfit. Fünf Banditen sehen nicht gleich aus.",
+      "mode": "Die Looks stammen aus",
+      "modes": {
+        "off": "Aus",
+        "marked": "Den Outfits mit dem Würfel",
+        "all": "Allen Outfits"
+      },
+      "mirror": "Das Tokenbild auch zufällig spiegeln",
+      "outro": "Token, die nacheinander platziert werden, zeigen jeden Look, bevor sich einer wiederholt. Im Token HUD würfelt der Würfel-Knopf einem Token einen neuen Look.",
+      "reroll": "Neuen Look würfeln",
+      "noReroll": "Dieser Token kann keinen neuen Look würfeln. Schalte zuerst Jede Figur sieht anders aus für die Figur ein."
+    },
+    "Backdrop": {
+      "title": "Kulissen",
+      "add": "Kulisse hinzufügen",
+      "addHint": "Ein breites Bild oder ein Video für die Sammlung wählen",
+      "off": "Kein Bild",
+      "offHint": "Das Kulissenbild wegnehmen",
+      "tint": "Tageszeit",
+      "tintHint": "Ein Licht über dem Kulissenbild",
+      "tints": {
+        "none": "Neutral",
+        "dawn": "Morgengrauen",
+        "dusk": "Abenddämmerung",
+        "night": "Nacht"
+      },
+      "pan": "Langsamer Schwenk",
+      "panHint": "Das Bild langsam über den Bildschirm bewegen",
+      "edit": "Kulisse ändern",
+      "remove": "Aus der Sammlung nehmen",
+      "removeTitle": "{name} entfernen",
+      "removeText": "{name} aus der Sammlung der Kulissen entfernen? Die Bilddatei bleibt.",
+      "editTitle": "Kulisse: {name}",
+      "name": "Name",
+      "picture": "Bild",
+      "sound": "Umgebungsgeräusch",
+      "playlist": "Playlist",
+      "noPlaylist": "Keine Playlist",
+      "editHint": "Das Geräusch läuft auf jedem Bildschirm, solange die Kulisse steht. Eine Playlist startet der SL, der zur Kulisse wechselt.",
+      "empty": "Noch keine Kulissen. Füge ein breites Bild hinzu, zum Beispiel eine Taverne oder einen Waldweg, oder zieh ein Bild hierher.",
+      "none": "In der Sammlung sind noch keine Kulissen.",
+      "known": "Dieses Bild ist schon in der Sammlung.",
+      "unknown": "Es gibt keine Kulisse {name}."
+    },
+    "Feeling": {
+      "title": "Gefühl",
+      "clear": "Kein Gefühl",
+      "off": "Der SL hat die Gefühle ausgeschaltet.",
+      "noRight": "Du darfst für {name} kein Gefühl zeigen.",
+      "happy": "Fröhlich",
+      "angry": "Wütend",
+      "worried": "Besorgt",
+      "sad": "Traurig",
+      "surprised": "Überrascht",
+      "thoughtful": "Nachdenklich",
+      "key": {
+        "happy": "Gefühl: fröhlich",
+        "angry": "Gefühl: wütend",
+        "worried": "Gefühl: besorgt",
+        "sad": "Gefühl: traurig",
+        "surprised": "Gefühl: überrascht",
+        "thoughtful": "Gefühl: nachdenklich",
+        "clear": "Gefühl: wegnehmen"
+      }
+    },
+    "Gear": {
+      "title": "Solange einer dieser Gegenstände angelegt ist",
+      "add": "Mit Namen hinzufügen",
+      "addPlaceholder": "Plattenpanzer, Mantel des Nordens",
+      "hint": "Zieh einen Gegenstand auf die Outfit-Karte, um ihn zu verknüpfen, oder tipp seinen Namen. Das Outfit wird angezogen, wenn die Figur den Gegenstand anlegt, und das vorherige Aussehen kommt zurück, wenn sie ihn ablegt.",
+      "dropOnCard": "Zieh den Gegenstand auf die Karte eines Outfits.",
+      "linked": "{item} ist mit {outfit} verknüpft. Das Outfit wird angezogen, solange er angelegt ist.",
+      "known": "{item} ist schon mit {outfit} verknüpft."
     }
   }
 }

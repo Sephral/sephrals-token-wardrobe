@@ -1,6 +1,6 @@
 # Sephral’s Token Wardrobe
 
-**Your rogue walks into the tavern in street clothes, climbs into battle gear for the fight and dresses up for the duke’s ball. Token Wardrobe gives every character a wardrobe, and one click on the sheet or the token puts a look on: the portrait and the token change together. When the innkeeper talks, the GM puts her portrait big on every screen.**
+**Your rogue walks into the tavern in street clothes, climbs into battle gear for the fight and dresses up for the duke’s ball. One click on the sheet or the token puts a look on: portrait and token change together.**
 
 [![Install by link](https://img.shields.io/badge/Foundry%20VTT-Install%20by%20link-fe6a1f?logo=foundryvirtualtabletop&logoColor=white)](#install)
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/7BjCgDYaBP)
@@ -10,25 +10,23 @@
 
 ## Highlights
 
-* **A conversation stage:** the GM brings portraits big onto every screen, with a name plate and a soft backdrop. One click on an outfit changes the expression, a mark shows who speaks, and one button closes the stage for all.
-* **Disguises:** an outfit can carry another name. While it is worn, players see that name on the token, in chat and on the stage, and the GM sees both.
-* **Outfits by place:** a Region puts an outfit on every token that enters it and can take it off again on leaving. A scene can ask for an outfit too.
-* **Made for players:** a small shirt button over the portrait on the sheet, and a palette in the token HUD. Click a look, done. Portrait and token change in the same moment.
-* **Drop images in:** from your computer, Foundry’s file browser or another character. Files named like `hero-token` and `hero-portrait` become one outfit.
-* **A start in one click:** an empty wardrobe offers street clothes, battle gear and fine clothes. Linked and unlinked tokens both work.
-* **Outfits that put themselves on:** battle gear when the fight starts, a bloodied look below half the hit points, a look while a status is active or plate armor is worn (D&D 5e). Afterwards the look you chose by hand comes back.
-* **Smooth changes and keys:** Foundry’s own token transitions, outfit keys and a small macro API.
+* **A conversation stage:** the GM brings portraits big onto every screen. One click changes the expression, a mark shows who speaks.
+* **Backdrops for the stage:** a wide picture behind the portraits, like a scene of a film: tavern, throne room, forest road. It fades into the next one, pans slowly and takes the light of dawn, dusk or night.
+* **Every figure looks different:** place five bandits and each one gets its own look.
+* **Feelings of the players:** a happy, worried or angry face floats over the token and the portrait, and the look changes with it.
+* **Equipment as trigger:** equip the armor and its outfit follows, take it off and the old look is back.
+* **Disguises:** an outfit can carry another name that players see on the token, in chat and on the stage.
+* **Outfits by place:** a Region puts an outfit on every token that enters it.
+* **Made for players:** a shirt button on the sheet and a palette in the token HUD. Click a look, done.
+* **Drop images in:** from your computer, Foundry’s file browser or another character.
+* **Outfits that put themselves on:** battle gear when the fight starts, a bloodied look below half the hit points. Afterwards your chosen look comes back.
 
 ## How it works
 
 1. Open the wardrobe from the shirt button on a sheet, the token HUD or the actor sidebar, and click *Start with three outfits*.
-2. Drop pictures onto the cards, give them names, a mood or a disguise name and click *Put on*.
-3. From then on players switch looks right on their own sheet or token. The GM decides in the settings whether players may wear and manage outfits.
+2. Drop pictures onto the cards and click *Put on*.
+3. Players switch looks on their own sheet or token. The GM decides in the settings what players may do.
 4. For a conversation, right click an actor in the sidebar and choose *Bring to the conversation stage*.
-
-## Good to know
-
-Players need Foundry’s file permissions to upload or browse images. Without them they still switch outfits and the window says why the file buttons are off.
 
 ## Install
 

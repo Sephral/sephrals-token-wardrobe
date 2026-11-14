@@ -9,7 +9,7 @@
     </div>
     <div class="stw-toolbar">
       <label class="stw-inline" data-tooltip="{{localize "STW.Stage.backdropHint"}}">{{localize "STW.Stage.backdropLabel"}}
-        <select name="backdrop">{{#each backdrops}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <select name="backdrop">{{#each shadings}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
       <button type="button" class="stw-danger" data-action="closeStage" {{#unless active}}disabled{{/unless}}
         data-tooltip="{{localize "STW.Stage.closeHint"}}"><i class="fa-solid fa-circle-xmark" inert></i> {{localize "STW.Stage.close"}}</button>
     </div>
@@ -26,6 +26,43 @@
     <button type="button" class="stw-primary" data-action="addActor" {{#if full}}disabled{{/if}}><i class="fa-solid fa-user-plus" inert></i> {{localize "STW.Stage.add"}}</button>
     <button type="button" data-action="addSelected" {{#unless hasTokens}}disabled{{/unless}}
       data-tooltip="{{localize "STW.Stage.addSelectedHint"}}"><i class="fa-solid fa-user-group" inert></i> {{localize "STW.Stage.addSelected"}}</button>
+  </section>
+
+  <section class="stw-backdrops">
+    <div class="stw-backdrops-head">
+      <strong><i class="fa-solid fa-image" inert></i> {{localize "STW.Backdrop.title"}}</strong>
+      <label class="stw-inline" data-tooltip="{{localize "STW.Backdrop.tintHint"}}">{{localize "STW.Backdrop.tint"}}
+        <select name="tint" {{#unless hasBackdrop}}disabled{{/unless}}>{{#each tints}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <label class="stw-inline" data-tooltip="{{localize "STW.Backdrop.panHint"}}"><input type="checkbox" name="pan" {{#if pan}}checked{{/if}}
+        {{#unless hasBackdrop}}disabled{{/unless}}> {{localize "STW.Backdrop.pan"}}</label>
+      <span class="stw-spacer"></span>
+      <button type="button" data-action="backdropOff" {{#unless hasBackdrop}}disabled{{/unless}}
+        data-tooltip="{{localize "STW.Backdrop.offHint"}}"><i class="fa-solid fa-eye-slash" inert></i> {{localize "STW.Backdrop.off"}}</button>
+      <button type="button" class="stw-primary" data-action="backdropAdd"
+        data-tooltip="{{localize "STW.Backdrop.addHint"}}"><i class="fa-solid fa-plus" inert></i> {{localize "STW.Backdrop.add"}}</button>
+    </div>
+    {{#if backdrops.length}}
+    <div class="stw-backdrop-strip">
+      {{#each backdrops}}
+      <article class="stw-backdrop-card{{#if active}} active{{/if}}" data-backdrop-id="{{id}}">
+        <button type="button" class="stw-backdrop-pick" data-action="backdropShow" data-tooltip="{{name}}">
+          <span class="stw-backdrop-thumb">{{{thumb}}}</span>
+          <span class="stw-backdrop-name">{{name}}</span>
+          {{#if audio}}<i class="fa-solid fa-music stw-backdrop-audio" inert></i>{{/if}}
+          {{#if key}}<kbd>{{key}}</kbd>{{/if}}
+        </button>
+        <span class="stw-backdrop-tools">
+          <button type="button" class="stw-icon" data-action="backdropEdit" data-tooltip="{{localize "STW.Backdrop.edit"}}"
+            aria-label="{{localize "STW.Backdrop.edit"}}"><i class="fa-solid fa-pen" inert></i></button>
+          <button type="button" class="stw-icon" data-action="backdropRemove" data-tooltip="{{localize "STW.Backdrop.remove"}}"
+            aria-label="{{localize "STW.Backdrop.remove"}}"><i class="fa-solid fa-trash" inert></i></button>
+        </span>
+      </article>
+      {{/each}}
+    </div>
+    {{else}}
+    <p class="stw-stage-hint">{{localize "STW.Backdrop.empty"}}</p>
+    {{/if}}
   </section>
 
   {{#if empty}}
@@ -50,9 +87,15 @@
             data-tooltip="{{localize "STW.Stage.speak"}}" aria-label="{{localize "STW.Stage.speak"}}" aria-pressed="{{#if speaking}}true{{else}}false{{/if}}"><i class="fa-solid fa-comment-dots" inert></i></button>
           <button type="button" class="stw-icon" data-action="flip"
             data-tooltip="{{localize "STW.Stage.flip"}} ({{sideLabel}})" aria-label="{{localize "STW.Stage.flip"}}"><i class="fa-solid fa-right-left" inert></i></button>
+          <button type="button" class="stw-icon{{#if depthFar}} on{{/if}}" data-action="depth"
+            data-tooltip="{{localize "STW.Stage.depthHint"}} ({{depthLabel}})" aria-label="{{localize "STW.Stage.depthHint"}}"><i class="fa-solid fa-layer-group" inert></i></button>
           <button type="button" class="stw-icon" data-action="remove"
             data-tooltip="{{localize "STW.Stage.remove"}}" aria-label="{{localize "STW.Stage.remove"}}"><i class="fa-solid fa-xmark" inert></i></button>
         </div>
+      </div>
+      <div class="stw-places" role="group" aria-label="{{localize "STW.Stage.placeHint"}}">
+        {{#each places}}<button type="button" class="stw-place{{#if on}} on{{/if}}" data-action="place" data-place="{{value}}"
+          aria-pressed="{{#if on}}true{{else}}false{{/if}}">{{label}}</button>{{/each}}
       </div>
       {{#if noOutfits}}
       <p class="stw-stage-hint">{{localize "STW.Stage.noOutfits"}}</p>

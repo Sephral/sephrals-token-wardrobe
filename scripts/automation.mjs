@@ -7,6 +7,7 @@
 
 import {MODULE_ID, setting} from "./config.mjs";
 import {trace} from "./debug.mjs";
+import {ARMOR_SYSTEMS, armorKind, gearKeys, gearMatches, isEquippedItem} from "./gear-logic.mjs";
 import {armorState, barPercent, hasAuto, planAuto} from "./outfits.mjs";
 import {baseOf, getOutfits, isActiveGM} from "./store.mjs";
 import {countFeature} from "./usage.mjs";
@@ -57,25 +58,38 @@ function hitPointPercent(actor) {
 }
 
 /**
- * The armor a character has on. Only dnd5e knows armor types, other systems give null (no rule applies).
+ * The armor a character has on. Only systems with armor kinds (dnd5e, PF2e) know them, in the others no armor rule
+ * applies (null).
  * @param {Actor} actor
  * @returns {Set<string>|null}
  */
 function armorOf(actor) {
-  if ( game.system.id !== "dnd5e" ) return null;
-  const items = actor.items.map(item => ({type: item.type, equipped: !!item.system?.equipped,
-    kind: item.system?.type?.value ?? ""}));
+  const system = game.system.id;
+  if ( !ARMOR_SYSTEMS.includes(system) ) return null;
+  const items = actor.items.map(item => ({type: "equipment", equipped: isEquippedItem(item, system),
+    kind: armorKind(item, system) ?? ""}));
   return armorState(items);
+}
+
+/**
+ * The equipped items of a character, by name and by the source they were made from.
+ * @param {Actor} actor
+ * @returns {Set<string>}
+ */
+export function gearOf(actor) {
+  const system = game.system.id;
+  return gearKeys(actor.items.map(item => ({name: item.name, equipped: isEquippedItem(item, system),
+    uuids: [item.uuid, item._stats?.compendiumSource, item.flags?.core?.sourceId]})));
 }
 
 /**
  * What the rules look at.
  * @param {Actor} actor
- * @returns {{inCombat: boolean, hpPercent: (number|null), statuses: Set<string>, armor: (Set<string>|null)}}
+ * @returns {{inCombat: boolean, hpPercent: (number|null), statuses: Set<string>, armor: (Set<string>|null), gear: Set<string>}}
  */
 export function stateOf(actor) {
   return {inCombat: inCombat(actor), hpPercent: hitPointPercent(actor), statuses: new Set(actor.statuses ?? []),
-    armor: armorOf(actor)};
+    armor: armorOf(actor), gear: gearOf(actor)};
 }
 
 /* -------------------------------------------- */
@@ -114,10 +128,13 @@ export async function evaluate(actor) {
     autoId: actor.getFlag(MODULE_ID, "autoId") ?? null
   };
   if ( !outfits.some(hasAuto) && !memory.autoId ) return false;
-  const plan = planAuto(outfits, stateOf(actor), memory);
+  const state = stateOf(actor);
+  const plan = planAuto(outfits, state, memory);
   if ( !plan.change ) return false;
   trace.add("automation", {actor: actor.name, wear: plan.wear, autoId: plan.autoId});
   countFeature(MODULE_ID, "autoWorn");
+  const chosen = outfits.find(o => o.id === plan.autoId);
+  if ( chosen?.auto.gear.length && gearMatches(chosen.auto.gear, state.gear) ) countFeature(MODULE_ID, "gearWorn");
   const target = actor.isToken ? actor.token : base;
   const flags = {manual: plan.manual, autoId: plan.autoId};
   if ( plan.wear ) {
@@ -180,9 +197,16 @@ export function registerAutomation() {
     const parent = effect.parent;
     schedule(parent?.documentName === "Actor" ? parent : parent?.parent);
   };
-  // Armor put on or taken off (dnd5e)
-  const onItem = item => {
-    if ( (game.system.id === "dnd5e") && (item.parent?.documentName === "Actor") && (item.type === "equipment") ) schedule(item.parent);
+  // Armor and other gear put on or taken off, in every game system
+  const onItem = (item, changes) => {
+    const actor = item.parent;
+    if ( (actor?.documentName !== "Actor") || !isActiveGM() ) return;
+    // Only characters whose outfits look at armor or gear need a check
+    const outfits = getOutfits(actor);
+    if ( !outfits.some(o => o.auto.gear.length || o.auto.armor.length) ) return;
+    // An update which does not touch the data of the item cannot change what is equipped
+    if ( changes && !("system" in changes) && !("flags" in changes) && !("name" in changes) ) return;
+    schedule(actor);
   };
   Hooks.on("createItem", onItem);
   Hooks.on("updateItem", onItem);

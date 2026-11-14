@@ -4,19 +4,22 @@
  */
 
 import {MODULE_ID, TEMPLATES, addSettingsGear, esc, flagDeletion, makeId, setting, t} from "./config.mjs";
+import {ARMOR_SYSTEMS, gearNames, namesFromText, normalizeGear} from "./gear-logic.mjs";
 import {mediaHTML} from "./palette.mjs";
 import {ARMOR_TYPES, EXPRESSIONS, alternateFiles, fileStem, hasAuto, isVideo, normalizeAuto, normalizeExpression, outfitsFromFiles,
   quickStartOutfits, uniqueNames, usableOutfits, withoutQuery} from "./outfits.mjs";
 import {baseOf, canEdit, canWear, currentOutfitId, fileRights, getOutfits, resolveTarget, saveOutfits} from "./store.mjs";
 import {addToStage} from "./stage.mjs";
 import {countFeature} from "./usage.mjs";
+import {VARIETY_MODES} from "./variety-logic.mjs";
+import {getVariety, saveVariety} from "./variety.mjs";
 import {wear} from "./wear.mjs";
 
 /** The icons of the moods, shared with the stage window. */
 export const EXPRESSION_ICONS = {
   neutral: "fa-face-meh", friendly: "fa-face-smile", happy: "fa-face-laugh-beam", angry: "fa-face-angry",
   hurt: "fa-bandage", sad: "fa-face-frown", afraid: "fa-face-grimace", surprised: "fa-face-surprise",
-  mocking: "fa-face-rolling-eyes"
+  mocking: "fa-face-rolling-eyes", worried: "fa-face-frown-open", thoughtful: "fa-face-meh-blank"
 };
 
 /**
@@ -183,7 +186,8 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
       wildcard: WardrobeApp.#onWildcard,
       newOutfit: WardrobeApp.#onNew,
       quickStart: WardrobeApp.#onQuickStart,
-      stage: WardrobeApp.#onStage
+      stage: WardrobeApp.#onStage,
+      variety: WardrobeApp.#onVariety
     }
   };
 
@@ -218,7 +222,10 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const worn = outfits.find(o => o.id === current);
     if ( game.user.isGM && worn?.disguise ) notices.push(t("STW.Window.disguised", {name: worn.disguise, real: this.base.name}));
     const moods = ["", ...EXPRESSIONS];
+    const variety = getVariety(this.base);
     return {
+      varietyOn: variety.mode !== "off",
+      varietyMarked: variety.mode === "marked",
       canStage: game.user.isGM && !!usableOutfits(outfits).length,
       name: actor.name,
       whoImage: mediaHTML(actor.img),
@@ -240,6 +247,7 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
         current: outfit.id === current,
         hasAuto: hasAuto(outfit),
         autoSummary: autoSummary(outfit),
+        gearText: gearNames(outfit.auto.gear),
         moods: moods.map(value => ({value, label: expressionName(value), selected: value === outfit.expression})),
         portraitHTML: mediaHTML(outfit.portrait),
         tokenHTML: mediaHTML(outfit.token)
@@ -337,6 +345,7 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
       else if ( name === "scale" ) outfit.scale = field.value === "" ? null : Number(field.value);
       else if ( name === "mirror" ) outfit.mirror = field.checked;
       else if ( name === "disguise" ) outfit.disguise = field.value.trim();
+      else if ( name === "variety" ) outfit.variety = field.checked;
       else if ( name === "expression" ) outfit.expression = normalizeExpression(field.value);
     });
   }
@@ -500,6 +509,16 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Pictures from Foundry's file browser and other characters
     const data = dragData(event);
+    // An item dropped on an outfit: the outfit goes on when the item is equipped
+    if ( data?.type === "Item" && data.uuid ) {
+      const item = await fromUuid(data.uuid);
+      if ( !card || (item?.documentName !== "Item") ) {
+        ui.notifications.info(t("STW.Gear.dropOnCard"));
+        return;
+      }
+      await this.#linkItem(card.dataset.outfitId, item);
+      return;
+    }
     if ( data?.type === "Actor" && data.uuid ) {
       const source = await fromUuid(data.uuid);
       if ( source?.documentName === "Actor" ) await this.#copyFrom(source);
@@ -509,6 +528,28 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if ( (typeof src !== "string") || !src ) return;
     if ( slot && card ) await this.#setSlot(card.dataset.outfitId, slot.dataset.slot, src);
     else await this.#addFiles([src]);
+  }
+
+  /**
+   * Link an item to an outfit: the outfit goes on while the item is equipped.
+   * @param {string} id
+   * @param {Item} item
+   */
+  async #linkItem(id, item) {
+    // An item of a character is known by the source it was made from, other items by themselves
+    const uuid = item.parent ? (item._stats?.compendiumSource ?? item.flags?.core?.sourceId ?? "") : item.uuid;
+    const outfits = getOutfits(this.base);
+    const outfit = outfits.find(o => o.id === id);
+    if ( !outfit ) return;
+    const before = outfit.auto.gear.length;
+    outfit.auto.gear = normalizeGear([...outfit.auto.gear, {name: item.name, uuid}]);
+    if ( outfit.auto.gear.length === before ) {
+      ui.notifications.info(t("STW.Gear.known", {item: item.name, outfit: outfit.label}));
+      return;
+    }
+    await this.#save(outfits);
+    countFeature(MODULE_ID, "gearLinked");
+    ui.notifications.info(t("STW.Gear.linked", {item: item.name, outfit: outfit.label}));
   }
 
   /**
@@ -631,6 +672,39 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
       countFeature(MODULE_ID, "autoSet");
       await this.#change(id, o => { o.auto = auto; });
     }
+  }
+
+  /**
+   * Set "Every figure looks different" for the character.
+   * @this {WardrobeApp}
+   */
+  static async #onVariety() {
+    if ( !canEdit(this.actor) ) return;
+    const now = getVariety(this.base);
+    const content = document.createElement("div");
+    content.innerHTML = `<div class="stw-auto-form"><p class="hint">${esc(t("STW.Variety.intro"))}</p>
+      <label class="stw-check">${esc(t("STW.Variety.mode"))}
+        <select name="mode">${VARIETY_MODES.map(mode => `<option value="${mode}" ${(mode === now.mode) ? "selected" : ""}>${
+          esc(t(`STW.Variety.modes.${mode}`))}</option>`).join("")}</select></label>
+      <label class="stw-check"><input type="checkbox" name="mirror" ${now.mirror ? "checked" : ""}> ${esc(t("STW.Variety.mirror"))}</label>
+      <p class="hint">${esc(t("STW.Variety.outro"))}</p></div>`;
+    const result = await DialogV2.wait({
+      window: {title: t("STW.Variety.title", {name: this.base.name}), icon: "fa-solid fa-dice"},
+      classes: ["stw-app", "stw-auto-dialog"],
+      position: {width: 460},
+      content,
+      buttons: [{
+        action: "save", label: "STW.Auto.save", icon: "fa-solid fa-check", default: true,
+        callback: (event, button) => ({mode: button.form.elements.mode.value, mirror: button.form.elements.mirror.checked})
+      }, {action: "cancel", label: "STW.Auto.cancel", icon: "fa-solid fa-xmark"}],
+      render: (event, dialog) => {
+        dialog.element.dataset.stwTheme = setting("theme");
+      },
+      rejectClose: false
+    });
+    if ( !result || (typeof result !== "object") ) return;
+    await saveVariety(this.base, result);
+    this.render();
   }
 
   /**
@@ -800,6 +874,7 @@ export function autoSummary(outfit) {
   if ( auto.hp !== null ) parts.push(t("STW.Auto.belowHp", {percent: auto.hp}));
   if ( auto.status.length ) parts.push(t("STW.Auto.whileStatus", {status: auto.status.map(statusName).join(", ")}));
   if ( auto.armor.length ) parts.push(t("STW.Auto.whileArmor", {armor: auto.armor.map(a => t(`STW.Auto.armor.${a}`)).join(", ")}));
+  if ( auto.gear.length ) parts.push(t("STW.Auto.whileGear", {gear: gearNames(auto.gear)}));
   return parts.join(", ");
 }
 
@@ -825,8 +900,16 @@ async function editAuto(outfit) {
   const boxes = effects.map(e => `<label class="stw-status"><input type="checkbox" name="status" value="${esc(e.id)}"
     ${auto.status.includes(e.id) ? "checked" : ""}><img src="${esc(e.img ?? e.icon ?? "")}" alt=""><span>${esc(statusName(e.id))}</span></label>`)
     .join("");
-  // Armor types exist in dnd5e only
-  const armorBoxes = (game.system.id === "dnd5e") ? `<p class="stw-auto-title">${esc(t("STW.Auto.armor.title"))}</p>
+  // Items which are equipped, linked by name or dropped on the card
+  const gearBoxes = auto.gear.map((link, index) => `<label class="stw-check"><input type="checkbox" name="gearKeep" value="${index}" checked>
+    <i class="fa-solid fa-shield-halved" inert></i> ${esc(link.name || link.uuid)}</label>`).join("");
+  const gearSection = `<p class="stw-auto-title">${esc(t("STW.Gear.title"))}</p>
+    <div class="stw-gear-list">${gearBoxes}</div>
+    <label class="stw-check">${esc(t("STW.Gear.add"))}
+      <input type="text" name="gearAdd" placeholder="${esc(t("STW.Gear.addPlaceholder"))}"></label>
+    <p class="hint">${esc(t("STW.Gear.hint"))}</p>`;
+  // Armor kinds exist in dnd5e and PF2e
+  const armorBoxes = ARMOR_SYSTEMS.includes(game.system.id) ? `<p class="stw-auto-title">${esc(t("STW.Auto.armor.title"))}</p>
     <div class="stw-armor-list">${ARMOR_TYPES.map(type => `<label class="stw-check"><input type="checkbox" name="armor" value="${type}"
     ${auto.armor.includes(type) ? "checked" : ""}> ${esc(t(`STW.Auto.armor.${type}`))}</label>`).join("")}</div>` : "";
   const content = document.createElement("div");
@@ -835,6 +918,7 @@ async function editAuto(outfit) {
     <label class="stw-check">${esc(t("STW.Auto.hp"))}
       <input type="number" name="hp" min="1" max="100" step="1" value="${auto.hp ?? ""}" placeholder="-"> %</label>
     ${armorBoxes}
+    ${gearSection}
     <p class="stw-auto-title">${esc(t("STW.Auto.status"))}</p>
     <div class="stw-status-list">${boxes}</div>
     <p class="hint">${esc(t("STW.Auto.outro"))}</p></div>`;
@@ -849,7 +933,11 @@ async function editAuto(outfit) {
         combat: button.form.elements.combat.checked,
         hp: button.form.elements.hp.value,
         status: Array.from(button.form.querySelectorAll("input[name=status]:checked"), i => i.value),
-        armor: Array.from(button.form.querySelectorAll("input[name=armor]:checked"), i => i.value)
+        armor: Array.from(button.form.querySelectorAll("input[name=armor]:checked"), i => i.value),
+        gear: [
+          ...Array.from(button.form.querySelectorAll("input[name=gearKeep]:checked"), i => auto.gear[Number(i.value)]),
+          ...namesFromText(button.form.elements.gearAdd.value).map(name => ({name, uuid: ""}))
+        ]
       })
     }, {action: "cancel", label: "STW.Auto.cancel", icon: "fa-solid fa-xmark"}],
     render: (event, dialog) => {

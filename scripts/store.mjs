@@ -25,12 +25,15 @@ export function baseOf(actor) {
 }
 
 /**
- * Work out the actor and token of a call. Takes an actor, a token document, a token placeable or a UUID.
+ * Work out the actor and token of a call. Takes an actor, a token document, a token placeable, a UUID or the id or name
+ * of a world actor.
  * @param {Actor|TokenDocument|Token|string|null|undefined} target
  * @returns {WardrobeTarget|null}
  */
 export function resolveTarget(target) {
-  if ( typeof target === "string" ) target = fromUuidSync(target, {strict: false});
+  if ( typeof target === "string" ) {
+    target = fromUuidSync(target, {strict: false}) ?? game.actors.get(target) ?? game.actors.getName(target);
+  }
   if ( target?.document && (target.document.documentName === "Token") ) target = target.document;
   let actor = null;
   let token = null;

@@ -3,10 +3,14 @@
  */
 
 import {MODULE_ID, SOCKET, TESTED_VERSIONS, esc, makeId, t} from "./config.mjs";
-import {armorState, cycleOutfit, nameChange, outfitsFromFiles, planAuto, stageName, textureScale} from "./outfits.mjs";
+import {cycleBackdrop, normalizeBackdrops, withBackdrop} from "./backdrop-logic.mjs";
+import {FEELINGS, outfitForFeeling, planFeeling} from "./feelings-logic.mjs";
+import {gearKeys, gearMatches, isEquippedItem} from "./gear-logic.mjs";
+import {armorState, cycleOutfit, nameChange, normalizeOutfit, outfitsFromFiles, planAuto, stageName, textureScale} from "./outfits.mjs";
 import {BEHAVIOR_TYPE} from "./places.mjs";
 import {layoutStage, normalizeStage, planEnter, planLeave, stageMetrics} from "./stage-logic.mjs";
 import {getStage} from "./stage.mjs";
+import {normalizeVariety, pickVariant, varietyPool} from "./variety-logic.mjs";
 
 /**
  * Run all checks.
@@ -34,7 +38,7 @@ async function checkAll() {
   check((typeof game.socket?.emit === "function") && !!SOCKET && !!game.modules.get(MODULE_ID)?.socket, "STW.SELFTEST.Socket");
   check("activeGM" in game.users, "STW.SELFTEST.ActiveGM");
   for ( const key of ["playersWear", "playersEdit", "allScenes", "transition", "automation", "sheetButton", "hudButton",
-    "stageBackdrop", "stageWear", "stageShow", "stageScale", "stage"] ) {
+    "stageBackdrop", "stageWear", "stageShow", "stageScale", "stage", "backdrops", "stageSound", "feelings", "feelingSeconds"] ) {
     check(game.settings.settings.has(`${MODULE_ID}.${key}`), "STW.SELFTEST.Storage", {key});
   }
   const files = outfitsFromFiles(["a/x-token.webp", "a/x-portrait.webp"], {makeId});
@@ -52,6 +56,21 @@ async function checkAll() {
     && (stageName("Gruk", {disguise: "Baron"}, null) === "Baron"), "STW.SELFTEST.Disguise");
   check(planEnter({current: "a", wanted: "b", restore: true, stored: false}).remember && (planLeave({stored: "a", current: "b", known: "a"}).wear === "a")
     && armorState([]).has("none"), "STW.SELFTEST.PlaceLogic");
+  // Random looks, backdrops, feelings and equipment as trigger
+  const looks = ["a", "b"].map(id => normalizeOutfit({id, label: id, portrait: `${id}.webp`, variety: id === "a"}, makeId));
+  const pick = pickVariant({pool: varietyPool(looks, normalizeVariety({mode: "all"})), used: {a: 1}, config: normalizeVariety({}),
+    random: () => 0});
+  check((pick?.outfit.id === "b") && (varietyPool(looks, normalizeVariety({mode: "marked"})).length === 1), "STW.SELFTEST.VarietyLogic");
+  const sets = normalizeBackdrops([{id: "x", img: "x.webp"}, {id: "y", img: "y.webp"}], makeId);
+  check((cycleBackdrop(sets, "x", 1).id === "y") && (withBackdrop({backdropId: null, tint: "none", pan: false}, sets[0]).backdropId === "x"),
+    "STW.SELFTEST.BackdropLogic");
+  const mood = normalizeOutfit({id: "m", label: "m", portrait: "m.webp", expression: "angry"}, makeId);
+  check((outfitForFeeling([mood], "angry")?.id === "m") && (planFeeling({current: "a", back: null, wanted: "m"}).back === "a")
+    && !!FEELINGS.happy.symbol, "STW.SELFTEST.FeelingLogic");
+  const gearSet = gearKeys([{name: "Plate Armor", equipped: true, uuids: ["Item.1"]}, {name: "Cloak", equipped: false}]);
+  check(gearMatches([{name: "plate armor", uuid: ""}], gearSet) && !gearMatches([{name: "Cloak", uuid: ""}], gearSet)
+    && isEquippedItem({system: {equipped: true}}, "dnd5e") && isEquippedItem({system: {equipStatus: 3}}, "swade"), "STW.SELFTEST.GearLogic");
+  check(!!globalThis.PIXI?.Text && !!globalThis.PIXI?.Graphics && !!game.audio?.play, "STW.SELFTEST.FeelingScreen");
   const stageStored = game.settings.get(MODULE_ID, "stage");
   check(!!stageStored && (typeof stageStored === "object") && Array.isArray(getStage().slots), "STW.SELFTEST.Stage");
   check(!!foundry.data?.regionBehaviors?.RegionBehaviorType && !!CONFIG.RegionBehavior?.dataModels?.[BEHAVIOR_TYPE], "STW.SELFTEST.Behavior");

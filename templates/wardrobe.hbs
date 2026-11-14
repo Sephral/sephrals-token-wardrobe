@@ -25,6 +25,8 @@
       <button type="button" data-action="wildcard"
         data-tooltip="{{localize "STW.Window.wildcardHint"}}"><i class="fa-solid fa-shuffle" inert></i> {{localize "STW.Window.wildcard"}}</button>
       {{/if}}
+      <button type="button" data-action="variety" class="{{#if varietyOn}}stw-on{{/if}}"
+        data-tooltip="{{localize "STW.Variety.hint"}}"><i class="fa-solid fa-dice" inert></i> {{localize "STW.Variety.button"}}</button>
       <button type="button" data-action="newOutfit"
         data-tooltip="{{localize "STW.Window.newHint"}}"><i class="fa-solid fa-plus" inert></i> {{localize "STW.Window.new"}}</button>
       <input type="file" class="stw-file" multiple hidden accept="{{accept}}">
@@ -80,6 +82,10 @@
           <input type="number" data-field="scale" value="{{scale}}" min="0.1" max="10" step="0.05" placeholder="1"></label>
         <label data-tooltip="{{localize "STW.Card.mirrorHint"}}"><input type="checkbox" data-field="mirror" {{#if mirror}}checked{{/if}}>
           {{localize "STW.Card.mirror"}}</label>
+        {{#if ../varietyMarked}}
+        <label data-tooltip="{{localize "STW.Card.varietyHint"}}"><input type="checkbox" data-field="variety" {{#if variety}}checked{{/if}}>
+          <i class="fa-solid fa-dice" inert></i> {{localize "STW.Card.variety"}}</label>
+        {{/if}}
       </div>
       <div class="stw-identity">
         <label data-tooltip="{{localize "STW.Card.disguiseHint"}}"><i class="fa-solid fa-user-secret" inert></i>
@@ -90,6 +96,9 @@
             {{#each moods}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
           </select></label>
       </div>
+      {{/if}}
+      {{#if gearText}}
+      <p class="stw-gear" data-tooltip="{{gearText}}"><i class="fa-solid fa-shield-halved" inert></i> {{gearText}}</p>
       {{/if}}
       <div class="stw-card-actions">
         {{#if ../wearable}}

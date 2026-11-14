@@ -1080,7 +1080,7 @@
 }
 
 .stw-stage .stw-actor.speaking {
-  transform: translateY(-10px) scale(1.04);
+  transform: translateY(-10px) scale(calc(var(--stw-s, 1) * 1.04));
   transform-origin: 50% 100%;
 }
 
@@ -1161,7 +1161,419 @@
   .stw-stage,
   .stw-stage .stw-actor,
   .stw-stage .stw-media,
-  .stw-stage .stw-backdrop {
+  .stw-stage .stw-backdrop,
+  .stw-stage .stw-set-layer,
+  .stw-stage .stw-tint,
+  .stw-stage .stw-location,
+  .stw-stage .stw-feel {
     transition-duration: 0.01s;
   }
+
+  .stw-stage.panning .stw-set-media,
+  .stw-stage .stw-feel.show {
+    animation: none;
+  }
+}
+
+/* -------------------------------------------- */
+/*  Backdrops of the stage                      */
+/* -------------------------------------------- */
+
+/* The picture behind the portraits: two layers fade over each other, the panning moves the picture slowly */
+.stw-stage .stw-set {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.stw-stage .stw-set-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 1.4s ease;
+}
+
+.stw-stage .stw-set-layer.stw-fresh {
+  opacity: 0;
+}
+
+.stw-stage .stw-set-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: 50% 60%;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  user-select: none;
+}
+
+.stw-stage.panning .stw-set-media {
+  transform: scale(1.14);
+  animation: stw-pan 70s ease-in-out infinite alternate;
+}
+
+@keyframes stw-pan {
+  from { transform: scale(1.14) translateX(-4.5%); }
+  to { transform: scale(1.14) translateX(4.5%); }
+}
+
+/* The light of the time of day */
+.stw-stage .stw-tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  transition: opacity 1.4s ease;
+}
+
+.stw-stage[data-tint="dawn"] .stw-tint {
+  opacity: 1;
+  background: linear-gradient(0deg, rgb(255 228 200), rgb(255 214 188) 55%, rgb(228 208 228));
+}
+
+.stw-stage[data-tint="dusk"] .stw-tint {
+  opacity: 1;
+  background: linear-gradient(0deg, rgb(255 190 140), rgb(236 156 140) 55%, rgb(166 130 200));
+}
+
+.stw-stage[data-tint="night"] .stw-tint {
+  opacity: 1;
+  background: linear-gradient(0deg, rgb(120 138 200), rgb(88 104 176));
+}
+
+/* The title of the place appears for a few seconds when the backdrop changes */
+.stw-stage .stw-location {
+  position: absolute;
+  top: clamp(20px, 6vh, 64px);
+  left: 50%;
+  z-index: 100;
+  max-width: 60%;
+  text-align: center;
+  color: #f6efe2;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(20px, 3vw, 44px);
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 0.85);
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  transition: opacity 1s ease, transform 1s ease;
+  pointer-events: none;
+}
+
+.stw-stage .stw-location:empty {
+  display: none;
+}
+
+.stw-stage .stw-location::after {
+  content: "";
+  display: block;
+  width: 3.4em;
+  height: 2px;
+  margin: 0.3em auto 0;
+  background: var(--stw-gold);
+}
+
+.stw-stage .stw-location.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Places and depth: the center, and portraits further back are smaller and stand a little higher */
+.stw-stage .stw-actor {
+  bottom: calc(var(--stw-h) * var(--stw-d, 0) * 0.03);
+  transform: scale(var(--stw-s, 1));
+  transform-origin: 50% 100%;
+}
+
+.stw-stage .stw-actor[data-side="center"] {
+  left: calc(50% - (var(--stw-w) / 2) + var(--stw-cx, 0px));
+}
+
+.stw-stage .stw-actor[data-side="center"].entering,
+.stw-stage .stw-actor[data-side="center"].leaving {
+  transform: translateY(40px) scale(var(--stw-s, 1));
+}
+
+.stw-stage .stw-actor[data-depth="1"] .stw-media {
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 0.55)) brightness(0.92);
+}
+
+.stw-stage .stw-actor[data-depth="2"] .stw-media {
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 0.55)) brightness(0.82);
+}
+
+/* With a backdrop picture the name plate is a lower third: a bar with a golden edge in the lower part of the screen */
+.stw-stage[data-set] .stw-plate {
+  left: 2%;
+  bottom: max(72px, 12vh);
+  transform: none;
+  align-items: flex-start;
+  max-width: 100%;
+  padding: 6px 26px 7px 14px;
+  border: none;
+  border-left: 4px solid var(--stw-gold);
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgb(14 11 20 / 0.94), rgb(14 11 20 / 0.7) 78%, rgb(14 11 20 / 0));
+  box-shadow: none;
+  text-align: left;
+}
+
+.stw-stage[data-set] .stw-actor.speaking .stw-plate {
+  border-left-color: #fff3cf;
+  box-shadow: none;
+}
+
+/* A feeling over the portrait */
+.stw-stage .stw-feel {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  z-index: 5;
+  padding: 0.2em;
+  border: 2px solid var(--stw-gold);
+  border-radius: 50%;
+  background: rgb(28 22 32 / 0.9);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.5);
+  font-size: clamp(34px, 4.6vw, 72px);
+  line-height: 1;
+  opacity: 0;
+  transform: translateX(-50%) scale(0);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.stw-stage .stw-feel:empty {
+  display: none;
+}
+
+.stw-stage .stw-feel.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  animation: stw-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes stw-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
+
+/* The controls of the stage: backdrops and places */
+.stw-backdrops {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 12px 8px;
+}
+
+.stw-backdrops-head label.stw-inline {
+  white-space: nowrap;
+}
+
+.stw-backdrops-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.stw-backdrop-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.stw-backdrop-card {
+  position: relative;
+  flex: none;
+  width: 132px;
+  overflow: hidden;
+  border: 1px solid var(--stw-line);
+  border-radius: 8px;
+  background: var(--stw-field);
+}
+
+.stw-backdrop-card.active {
+  border-color: var(--stw-accent);
+  box-shadow: 0 0 0 1px var(--stw-accent);
+  background: var(--stw-accent-soft);
+}
+
+.stw-app button.stw-backdrop-pick {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  width: 100%;
+  height: auto;
+  padding: 3px;
+  border: none;
+  background: none;
+  white-space: normal;
+}
+
+.stw-backdrop-thumb {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--stw-thumb);
+}
+
+.stw-backdrop-thumb img,
+.stw-backdrop-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+}
+
+.stw-backdrop-name {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stw-backdrop-audio {
+  position: absolute;
+  left: 8px;
+  bottom: 24px;
+  color: #fff;
+  font-size: 10px;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.9);
+}
+
+.stw-backdrop-pick kbd {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  min-width: 14px;
+  padding: 0 3px;
+  border: none;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.62);
+  box-shadow: none;
+  color: #fff;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+}
+
+.stw-backdrop-tools {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: none;
+  gap: 2px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.55);
+}
+
+.stw-backdrop-card:hover .stw-backdrop-tools,
+.stw-backdrop-card:focus-within .stw-backdrop-tools {
+  display: flex;
+}
+
+.stw-app .stw-backdrop-tools button.stw-icon {
+  width: 24px;
+  height: 22px;
+  color: #fff;
+}
+
+.stw-places {
+  display: flex;
+  gap: 2px;
+}
+
+.stw-app button.stw-place {
+  height: 22px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+
+.stw-app button.stw-place.on {
+  border-color: var(--stw-accent);
+  background: var(--stw-accent-soft);
+  color: var(--stw-accent);
+}
+
+.stw-backdrop-form file-picker {
+  flex: 1;
+  min-width: 0;
+}
+
+.stw-backdrop-form .stw-check select,
+.stw-backdrop-form .stw-check input[type="text"] {
+  flex: 1;
+}
+
+/* Feelings, equipment and the dice of the wardrobe */
+.stw-feel-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0 2px;
+}
+
+.stw-feel-title {
+  margin-right: 4px;
+  color: var(--stw-muted);
+  font-size: 11px;
+}
+
+.stw-palette button.stw-feel-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--stw-field);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.stw-palette button.stw-feel-btn:hover:not(:disabled) {
+  border-color: var(--stw-accent);
+  background: var(--stw-accent-soft);
+}
+
+.stw-palette button.stw-feel-clear {
+  color: var(--stw-muted);
+  font-size: 12px;
+}
+
+.stw-gear {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--stw-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stw-gear-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stw-app button.stw-on {
+  border-color: var(--stw-accent);
+  color: var(--stw-accent);
 }
