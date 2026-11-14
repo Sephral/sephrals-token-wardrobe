@@ -23,13 +23,17 @@ export function mediaHTML(src, cls="") {
 }
 
 /**
- * The picture of one outfit: the portrait, with the token as a small round picture in the corner.
+ * The picture of one outfit: the portrait, with the token as a small round picture in the corner. The token HUD shows
+ * it the other way round, because there a click changes the token in front of you.
  * @param {import("./outfits.mjs").Outfit} outfit
+ * @param {"portrait"|"token"} [prefer="portrait"]   Which picture is the big one
  * @returns {string}
  */
-export function thumbHTML(outfit) {
-  const main = outfit.portrait || outfit.token;
-  const bubble = (outfit.portrait && outfit.token && (outfit.token !== outfit.portrait)) ? outfit.token : "";
+export function thumbHTML(outfit, prefer="portrait") {
+  const first = (prefer === "token") ? outfit.token : outfit.portrait;
+  const second = (prefer === "token") ? outfit.portrait : outfit.token;
+  const main = first || second;
+  const bubble = (first && second && (first !== second)) ? second : "";
   return `<span class="stw-thumb">${mediaHTML(main, "stw-main")}${bubble
     ? `<span class="stw-bubble">${mediaHTML(bubble)}</span>` : ""}</span>`;
 }
@@ -39,9 +43,10 @@ export function thumbHTML(outfit) {
  * @param {Actor|TokenDocument} target
  * @param {object} [options]
  * @param {boolean} [options.reroll=false]    Offer a new random look (token HUD)
+ * @param {"portrait"|"token"} [options.prefer="portrait"]   The big picture of each outfit (token HUD: the token)
  * @returns {string}
  */
-export function paletteHTML(target, {reroll = false} = {}) {
+export function paletteHTML(target, {reroll = false, prefer = "portrait"} = {}) {
   const resolved = resolveTarget(target);
   if ( !resolved ) return "";
   const {base, actor, token} = resolved;
@@ -64,7 +69,7 @@ export function paletteHTML(target, {reroll = false} = {}) {
   const columns = Math.min(4, Math.max(1, outfits.length));
   const disabled = wearable ? "" : " disabled";
   const cards = outfits.map(outfit => `<button type="button" class="stw-outfit${(outfit.id === current) ? " active" : ""}"
-    data-stw="wear" data-outfit-id="${esc(outfit.id)}" data-tooltip="${esc(outfit.label)}"${disabled}>${thumbHTML(outfit)}
+    data-stw="wear" data-outfit-id="${esc(outfit.id)}" data-tooltip="${esc(outfit.label)}"${disabled}>${thumbHTML(outfit, prefer)}
     <span class="stw-outfit-label">${esc(outfit.label)}</span></button>`).join("");
   return `${head}<div class="stw-palette-grid" style="--stw-columns: ${columns}">${cards}</div>`;
 }

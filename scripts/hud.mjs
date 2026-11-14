@@ -63,7 +63,7 @@ export function onRenderTokenHUD(hud, element) {
     setOpen(hud, openFor !== token.uuid);
   });
 
-  const palette = createPalette(token, "palette stw-hud-palette", "foundry", {reroll: true});
+  const palette = createPalette(token, "palette stw-hud-palette", "foundry", {reroll: true, prefer: "token"});
   palette.addEventListener("click", event => onPaletteClick(event, hud, token));
   column.append(button, palette);
   // Another palette of the HUD closes this one
@@ -159,7 +159,7 @@ let pendingReopen = null;
 function refreshPalette(hud, token) {
   const old = hud.element?.querySelector(".stw-hud-palette");
   if ( !old || (hud.document !== token) ) return;
-  old.innerHTML = paletteHTML(token, {reroll: true});
+  old.innerHTML = paletteHTML(token, {reroll: true, prefer: "token"});
 }
 
 /** Re-render an open token HUD, e.g. after a setting changed. */
