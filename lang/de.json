@@ -18,11 +18,11 @@
       },
       "sheetButton": {
         "name": "Knopf am Porträt des Bogens",
-        "hint": "Zeigt einen kleinen Hemd-Knopf über dem Porträt jedes Charakterbogens. Er öffnet die Outfits direkt neben dem Porträt. Nur dieses Gerät."
+        "hint": "Zeigt ein kleines Hemd-Symbol über dem Porträt jedes Charakterbogens. Es öffnet die Outfits direkt neben dem Porträt. Nur dieses Gerät."
       },
       "hudButton": {
         "name": "Knopf im Token-HUD",
-        "hint": "Zeigt den Hemd-Knopf im Token-HUD. Nur dieses Gerät."
+        "hint": "Zeigt das Hemd-Symbol im Token-HUD. Nur dieses Gerät."
       },
       "playersWear": {
         "name": "Spieler ziehen Outfits an",
@@ -87,7 +87,7 @@
       },
       "feelingSeconds": {
         "name": "Wie lange ein Gefühl bleibt",
-        "hint": "Sekunden, die ein Gefühl über dem Token bleibt, bevor das vorherige Aussehen zurückkommt. 0 behält es, bis es geändert wird."
+        "hint": "Sekunden, die ein Gefühl über dem Token bleibt, bevor das vorherige Aussehen zurückkommt. Bei 0 bleibt es, bis es geändert wird."
       }
     },
     "gear": "Einstellungen",
@@ -105,7 +105,7 @@
       "Hud": "Die Palette des Token-HUD fehlt.",
       "Sheet": "Die Klasse der Akteurbögen fehlt.",
       "Wildcard": "Die Liste der Wildcard-Bilder fehlt.",
-      "Bar": "Das Lesen der Token-Leiste fehlt.",
+      "Bar": "Foundry liefert die Werte der Token-Leiste nicht.",
       "Transitions": "Foundry kennt diese Tokenwechsel nicht: {types}",
       "Status": "Die Liste der Zustände fehlt.",
       "Socket": "Der Socket des Moduls ist nicht eingeschaltet.",
@@ -117,7 +117,7 @@
       "Disguise": "Die Regeln für Verkleidungen funktionieren nicht.",
       "PlaceLogic": "Die Regeln für Outfits nach Ort funktionieren nicht.",
       "Stage": "Die Einstellung der Gesprächsbühne fehlt.",
-      "Behavior": "Das Regionsverhalten Outfit anziehen ist nicht angemeldet.",
+      "Behavior": "Das Regionsverhalten Outfit anziehen ist nicht registriert.",
       "StageScreen": "Die Bildschirmelemente für die Gesprächsbühne fehlen.",
       "Nameplate": "Foundry zeichnet die Tokennamen nicht so, wie das Modul es erwartet.",
       "VarietyLogic": "Die Regeln für Zufallslooks funktionieren nicht.",
@@ -129,9 +129,9 @@
     "DEBUG": {
       "Title": "Debug-Datei",
       "Save": "Debug-Datei speichern",
-      "Hint": "Eine Datei über alle Module von Sephral in dieser Welt, für Fehlerberichte. Sie enthält Chattexte und Geflüster.",
+      "Hint": "Eine Datei über alle Module von Sephral in dieser Welt, für Fehlerberichte. Sie enthält Chattexte und Flüsternachrichten.",
       "Entry": "Token Wardrobe",
-      "Saved": "Debug-Datei gespeichert: {file}. Sie enthält Chattexte und Geflüster, prüfe sie vor dem Teilen."
+      "Saved": "Debug-Datei gespeichert: {file}. Sie enthält Chattexte und Flüsternachrichten, prüfe sie vor dem Teilen."
     },
     "Window": {
       "title": "Kleiderschrank: {name}",
@@ -178,8 +178,8 @@
     "Card": {
       "portrait": "Porträt",
       "token": "Token",
-      "portraitEmpty": "Kein Porträt: das Porträt bleibt wie es ist",
-      "tokenEmpty": "Kein Tokenbild: der Token bleibt wie er ist",
+      "portraitEmpty": "Kein Porträt: Das Porträt bleibt, wie es ist",
+      "tokenEmpty": "Kein Tokenbild: Der Token bleibt, wie er ist",
       "clear": "Leeren",
       "name": "Name des Outfits",
       "scale": "Größe",
@@ -202,13 +202,13 @@
       "varietyHint": "Dieses Outfit kann zufällig gewählt werden, wenn nicht verknüpfte Token dieser Figur platziert werden"
     },
     "Quick": {
-      "street": "Straßenkleidung",
+      "street": "Alltagskleidung",
       "battle": "Kampfausrüstung",
       "fine": "Schicke Kleidung"
     },
     "Auto": {
       "title": "Automatik: {name}",
-      "intro": "Dieses Outfit zieht sich an, wenn eines davon zutrifft. Das erste passende Outfit in der Liste gewinnt. Endet die Lage, kommt das von Hand gewählte Outfit zurück.",
+      "intro": "Dieses Outfit zieht sich an, wenn eines davon zutrifft. Das erste passende Outfit in der Liste gewinnt. Ist die Situation vorbei, kommt das von Hand gewählte Outfit zurück.",
       "combat": "Solange die Figur in einem laufenden Kampf ist",
       "hp": "Wenn die Lebenspunkte unter",
       "status": "Solange einer dieser Zustände aktiv ist",
@@ -231,7 +231,7 @@
     },
     "Suggest": {
       "title": "Varianten für {name}",
-      "intro": "Diese Dateien sehen aus wie Varianten von Porträt oder Tokenbild. Hake an, was dazukommen soll.",
+      "intro": "Diese Dateien sehen aus wie Varianten von Porträt oder Tokenbild. Setze ein Häkchen bei dem, was dazukommen soll.",
       "add": "Hinzufügen",
       "none": "Keine ähnlichen Dateien neben den Bildern gefunden."
     },
@@ -324,7 +324,7 @@
         "2": "Hinten"
       },
       "depthHint": "Weiter nach hinten",
-      "placeHint": "Platz auf der Bühne"
+      "placeHint": "Position auf der Bühne"
     },
     "BEHAVIOR": {
       "label": "Outfit anziehen",
@@ -332,11 +332,11 @@
       "FIELDS": {
         "outfit": {
           "label": "Outfit",
-          "hint": "Der Name des Outfits, zum Beispiel Straßenkleidung. Ein Token, dessen Figur kein Outfit mit diesem Namen hat, bleibt wie es ist."
+          "hint": "Der Name des Outfits, zum Beispiel Alltagskleidung. Ein Token, dessen Figur kein Outfit mit diesem Namen hat, bleibt wie es ist."
         },
         "leave": {
           "label": "Beim Verlassen",
-          "hint": "Das Outfit behalten oder das vorherige Outfit wieder anziehen, wenn das Token die Region verlässt."
+          "hint": "Das Outfit behalten oder das vorherige Outfit wieder anziehen, wenn der Token die Region verlässt."
         }
       },
       "leave": {
@@ -347,7 +347,7 @@
     "Scene": {
       "title": "Token Wardrobe",
       "outfit": "Outfit dieser Szene",
-      "outfitHint": "Der Name eines Outfits, zum Beispiel Straßenkleidung. Wird die Szene aktiviert, ziehen die Token darauf dieses Outfit an. Das tun auch Token, die hinzukommen, solange sie aktiv ist.",
+      "outfitHint": "Der Name eines Outfits, zum Beispiel Alltagskleidung. Wird die Szene aktiviert, ziehen die Token darauf dieses Outfit an. Das tun auch Token, die hinzukommen, solange sie aktiv ist.",
       "leave": "Wenn die Szene endet",
       "leaveHint": "Das Outfit behalten oder den Token ihr vorheriges Outfit zurückgeben, wenn eine andere Szene aktiviert wird."
     },
@@ -363,7 +363,7 @@
         "all": "Allen Outfits"
       },
       "mirror": "Das Tokenbild auch zufällig spiegeln",
-      "outro": "Token, die nacheinander platziert werden, zeigen jeden Look, bevor sich einer wiederholt. Im Token HUD würfelt der Würfel-Knopf einem Token einen neuen Look.",
+      "outro": "Token, die nacheinander platziert werden, zeigen jeden Look, bevor sich einer wiederholt. Im Token-HUD würfelt der Würfel-Knopf einem Token einen neuen Look.",
       "reroll": "Neuen Look würfeln",
       "noReroll": "Dieser Token kann keinen neuen Look würfeln. Schalte zuerst Jede Figur sieht anders aus für die Figur ein."
     },
@@ -424,9 +424,9 @@
       "title": "Solange einer dieser Gegenstände angelegt ist",
       "add": "Mit Namen hinzufügen",
       "addPlaceholder": "Plattenpanzer, Mantel des Nordens",
-      "hint": "Zieh einen Gegenstand auf die Outfit-Karte, um ihn zu verknüpfen, oder tipp seinen Namen. Das Outfit wird angezogen, wenn die Figur den Gegenstand anlegt, und das vorherige Aussehen kommt zurück, wenn sie ihn ablegt.",
+      "hint": "Zieh einen Gegenstand auf die Outfit-Karte, um ihn zu verknüpfen, oder gib seinen Namen ein. Das Outfit wird angezogen, wenn die Figur den Gegenstand anlegt, und das vorherige Aussehen kommt zurück, wenn sie ihn ablegt.",
       "dropOnCard": "Zieh den Gegenstand auf die Karte eines Outfits.",
-      "linked": "{item} ist mit {outfit} verknüpft. Das Outfit wird angezogen, solange er angelegt ist.",
+      "linked": "{item} ist mit {outfit} verknüpft. Das Outfit wird angezogen, solange der Gegenstand angelegt ist.",
       "known": "{item} ist schon mit {outfit} verknüpft."
     }
   }

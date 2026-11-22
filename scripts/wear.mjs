@@ -22,7 +22,7 @@ const queues = new Map();
  * @param {() => Promise<*>} job
  * @returns {Promise<*>}
  */
-function enqueue(key, job) {
+export function enqueue(key, job) {
   const previous = queues.get(key) ?? Promise.resolve();
   const next = previous.catch(() => {}).then(job);
   queues.set(key, next);

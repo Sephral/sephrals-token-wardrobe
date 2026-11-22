@@ -1,4 +1,5 @@
 import {MODULE_ID, TESTED_VERSIONS, setting, t} from "./config.mjs";
+import {addOutfit, listOutfits, wearOutfit} from "./api.mjs";
 import {registerAutomation} from "./automation.mjs";
 import {addBackdrops, getBackdrops, removeBackdrop, updateBackdrop} from "./backdrops.mjs";
 import {registerFeelingKeys, setFeeling, startFeelings} from "./feelings.mjs";
@@ -18,6 +19,7 @@ import {openStageControls} from "./stage-app.mjs";
 import {addToStage, flipSide, getStage, hideStage, removeFromStage, renderStage, setBackdrop, setDepth, setExpression,
   setPan, setPlace, setSpeaker, setTint, showBackdrop, showStage, stageTarget, startStage, stepBackdrop} from "./stage.mjs";
 import {registerUsage} from "./usage.mjs";
+import {startTranslatorRefresh} from "./translator-refresh.mjs";
 import {canReroll, getVariety, onPreCreateToken, rerollLook, saveVariety} from "./variety.mjs";
 import {openWardrobe, refreshWardrobes} from "./wardrobe-app.mjs";
 import {step, stepSelected, syncLinkedTokens, wear} from "./wear.mjs";
@@ -84,7 +86,10 @@ Hooks.once("init", () => {
       if ( actor ) refreshWardrobes(baseOf(actor));
     });
   }
+  startTranslatorRefresh();
   game.modules.get(MODULE_ID).api = {
+    /** True: this module redraws its stage texts on the hook "sephrals-translator.refresh". */
+    translatorRefresh: true,
     /**
      * Put an outfit on an actor, a token or a UUID. The outfit is an id, a name or a position (from 1). Returns
      * {actor, token, outfit} or null.
@@ -101,6 +106,15 @@ Hooks.once("init", () => {
       const resolved = resolveTarget(target);
       return resolved ? foundry.utils.deepClone(getOutfits(resolved.base)) : [];
     },
+    /**
+     * For other modules: add an outfit ({name, portrait, token, scale, mirror}) to the wardrobe of an actor, token or UUID.
+     * Resolves with a copy of the new outfit, or null when the user may not or the request has no image.
+     */
+    addOutfit,
+    /** For other modules: put an outfit on (id, name or position), options {scope: "target"|"actor"}. Resolves with true or false. */
+    wearOutfit,
+    /** The outfits of an actor, token or UUID as copies. */
+    listOutfits,
     /** The outfit an actor or token has on, or null. */
     current: target => {
       const resolved = resolveTarget(target);

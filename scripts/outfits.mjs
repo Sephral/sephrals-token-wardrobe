@@ -574,3 +574,31 @@ export function planAuto(outfits, state, memory) {
   const back = usableOutfits(outfits).some(o => o.id === manual) ? manual : null;
   return {change: true, wear: back, autoId: null, manual};
 }
+
+/** Limits for outfits added through the api. */
+export const MAX_OUTFITS = 100;
+export const MAX_LABEL = 80;
+
+/**
+ * The outfit an add request makes (api.addOutfit): the same shape as every stored outfit, a name which no outfit of the
+ * wardrobe has yet. Without a name and without an image there is nothing to add.
+ * @param {object} data                      {name, portrait, token, scale, mirror}
+ * @param {Outfit[]} existing                The outfits already in the wardrobe
+ * @param {() => string} makeId
+ * @returns {Outfit|null}
+ */
+export function outfitFromRequest(data, existing, makeId) {
+  if ( !data || (typeof data !== "object") ) return null;
+  if ( (existing?.length ?? 0) >= MAX_OUTFITS ) return null;
+  const outfit = normalizeOutfit({
+    label: data.name ?? data.label, portrait: data.portrait, token: data.token, scale: data.scale, mirror: data.mirror,
+    id: ""
+  }, makeId);
+  if ( !outfit.portrait && !outfit.token ) return null;
+  const taken = new Set((existing ?? []).map(o => String(o.label ?? "").toLowerCase()));
+  const base = (outfit.label || "Outfit").slice(0, MAX_LABEL);
+  let label = base;
+  for ( let n = 2; taken.has(label.toLowerCase()); n++ ) label = `${base} ${n}`;
+  outfit.label = label;
+  return outfit;
+}

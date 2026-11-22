@@ -713,16 +713,49 @@ export function renderStage() {
     figure.dataset.expression = slot.expression;
     figure.classList.toggle("speaking", state.speaker === slot.id);
     figure.querySelector(".stw-plate-name").textContent = slot.name;
-    // The GM also sees who is behind a disguise
-    const real = game.user.isGM ? (game.actors.get(slot.actorId)?.name ?? "") : "";
-    const hint = figure.querySelector(".stw-plate-real");
-    hint.textContent = (real && (real !== slot.name)) ? t("STW.Stage.realName", {name: real}) : "";
+    figure.querySelector(".stw-plate-real").textContent = realNameHint(slot);
     if ( figure.querySelector(".stw-picture").dataset.src !== slot.img ) setMedia(figure, slot.img);
   }
   element.classList.add("active");
   layoutNow();
   Hooks.callAll(STAGE_HOOK, state);
   controls.refresh();
+}
+
+/**
+ * The GM also sees who is behind a disguise.
+ * @param {import("./stage-logic.mjs").StageSlot} slot
+ * @returns {string}
+ */
+function realNameHint(slot) {
+  const real = game.user.isGM ? (game.actors.get(slot.actorId)?.name ?? "") : "";
+  return (real && (real !== slot.name)) ? t("STW.Stage.realName", {name: real}) : "";
+}
+
+/**
+ * Write the texts of the stage that were built from language keys again, without drawing the stage anew: the label of
+ * the overlay (set once when it is created) and the "real name" hints under the nameplates. Used when the translator
+ * changes those keys.
+ * @param {{title?: boolean, hints?: boolean}} [what]
+ * @returns {{title: boolean, hints: number}}   What was written
+ */
+export function refreshStageTexts({title = true, hints = true} = {}) {
+  const done = {title: false, hints: 0};
+  if ( title && overlay?.isConnected ) {
+    overlay.setAttribute("aria-label", t("STW.Stage.title"));
+    done.title = true;
+  }
+  if ( hints ) {
+    const slots = getStage().slots;
+    for ( const [id, figure] of figures ) {
+      const slot = slots.find(s => s.id === id);
+      const el = figure.querySelector(".stw-plate-real");
+      if ( !slot || !el ) continue;
+      el.textContent = realNameHint(slot);
+      done.hints++;
+    }
+  }
+  return done;
 }
 
 /**

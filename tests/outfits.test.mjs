@@ -262,3 +262,39 @@ test("armor rules follow the equipped armor", () => {
   assert.equal(plan.wear, "Plate");
   assert.ok(ARMOR_TYPES.includes("shield"));
 });
+
+import {outfitFromRequest} from "../scripts/outfits.mjs";
+
+test("outfitFromRequest builds a stored shape with a new id and a free name", () => {
+  const existing = [outfit("Battle"), outfit("Battle 2")];
+  const o = outfitFromRequest({name: " battle ", portrait: "a.webp", token: "b.webp", scale: 1.5, mirror: true}, existing, makeId);
+  assert.equal(o.label, "battle 3");
+  assert.equal(o.portrait, "a.webp");
+  assert.equal(o.token, "b.webp");
+  assert.equal(o.scale, 1.5);
+  assert.equal(o.mirror, true);
+  assert.ok(o.id);
+  assert.deepEqual(o.auto, {combat: false, hp: null, status: [], armor: [], gear: []});
+});
+
+test("outfitFromRequest keeps a video as token only, takes the name from the file and refuses empty requests", () => {
+  const video = outfitFromRequest({name: "Moving", portrait: "x.webm", token: "x.webm"}, [], makeId);
+  assert.equal(video.portrait, "");
+  assert.equal(video.token, "x.webm");
+  assert.equal(outfitFromRequest({token: "dir/fine-clothes.png"}, [], makeId).label, "Fine clothes");
+  assert.equal(outfitFromRequest({name: "Nothing"}, [], makeId), null);
+  assert.equal(outfitFromRequest(null, [], makeId), null);
+  assert.equal(outfitFromRequest({portrait: "a.png"}, [], makeId).label, "A");
+});
+
+test("outfitFromRequest ignores a given id", () => {
+  assert.notEqual(outfitFromRequest({name: "X", token: "x.png", id: "fixed"}, [], makeId).id, "fixed");
+});
+
+test("outfitFromRequest caps the wardrobe and the label", async () => {
+  const {outfitFromRequest: from, MAX_OUTFITS, MAX_LABEL} = await import("../scripts/outfits.mjs");
+  const full = Array.from({length: MAX_OUTFITS}, (_, i) => ({label: `o${i}`}));
+  assert.equal(from({name: "x", token: "a.webp"}, full, () => "id"), null);
+  const o = from({name: "x".repeat(300), token: "a.webp"}, [], () => "id");
+  assert.equal(o.label.length, MAX_LABEL);
+});

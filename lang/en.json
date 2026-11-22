@@ -105,7 +105,7 @@
       "Hud": "The token HUD palette is missing.",
       "Sheet": "The actor sheet class is missing.",
       "Wildcard": "The list of wildcard images is missing.",
-      "Bar": "The token bar reading is missing.",
+      "Bar": "Foundry does not provide the token bar values.",
       "Transitions": "Foundry does not know the token changes: {types}",
       "Status": "The list of status effects is missing.",
       "Socket": "The socket of the module is not switched on.",
@@ -129,7 +129,7 @@
     "DEBUG": {
       "Title": "Debug file",
       "Save": "Save debug file",
-      "Hint": "One file about all of Sephral's modules in this world, for bug reports. It contains chat text and whispers.",
+      "Hint": "One file about all of Sephral’s modules in this world, for bug reports. It contains chat text and whispers.",
       "Entry": "Token Wardrobe",
       "Saved": "Debug file saved: {file}. It contains chat text and whispers, check it before you share it."
     },

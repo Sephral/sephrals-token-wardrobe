@@ -226,8 +226,11 @@ The first button in the module settings, *Sephral’s Modules* (GMs only), opens
 | `next(target)` and `previous(target)` | Put on the next or previous outfit, wrapping around. |
 | `open(target)` | Opens the wardrobe window. |
 | `outfits(target)` | The outfits of a character as a list of copies. |
+| `addOutfit(target, {name, portrait, token, scale, mirror})` | Adds an outfit to the wardrobe of a character, the same way the window does. A GM or an owner may do it (players only while *Players manage the wardrobe* is on). `name` is cut at 80 characters and gets a number when it is taken, a wardrobe holds at most 100 outfits (more returns `null`), `portrait` or `token` is needed, a video only counts as token image. Returns a copy of the new outfit with its id, or `null`. Fires the hook `sephrals-token-wardrobe.added` with `{actor, outfit}`. |
+| `wearOutfit(target, outfit, {scope})` | Puts an outfit on like `wear` (rights, other scenes through the active GM, waiting notes) and returns `true` or `false`. `scope` is `"target"` (default, an unlinked token is dressed on its own) or `"actor"` (the character and its linked tokens). |
+| `listOutfits(target)` | The outfits of a character as copies, same as `outfits`. |
 | `current(target)` | The outfit that is on now, or `null`. |
-| `stage.show(actors, options)` | Shows a stage (GM). `actors` is a list of actors, tokens, UUIDs or names, or entries like `{actor, outfit, side}`. Options: `replace` (default true, false adds to the stage), `speaker`, `backdrop` (`soft`, `dark`, `none`) and `open` (open the controls). Returns the stage. |
+| `stage.show(actors, options)` | Shows a stage (GM). `actors` is a list of actors, tokens, UUIDs or names, or entries like `{actor, outfit, side}`. Options: `replace` (default true, false adds to the stage), `speaker`, `backdrop` (`soft`, `dark`, `none`), `scenery` (a backdrop picture of the library by id, name or position) and `open` (open the controls). Returns the stage. |
 | `stage.add(actor, options)` | Brings one character on or changes its portrait (GM). Options: `outfit` (id, name, position or mood), `side`, `speaking`, `open`. |
 | `stage.setExpression(actor, outfit)` | Shows an outfit on a portrait (GM). The outfit is its id, name, position from 1 or a mood such as `angry`. Returns the portrait or `null`. |
 | `stage.speak(actor)` | Marks who speaks, `null` for nobody (GM). |
@@ -249,7 +252,7 @@ The first button in the module settings, *Sephral’s Modules* (GMs only), opens
 | `runSelfTest()` | Runs the self test (GM). |
 | `saveDebugFile()` | Saves the debug file (GM). |
 
-The hook `sephrals-token-wardrobe.worn` fires on the client that put an outfit on, with `{actor, token, outfit, source}`. `source` is `user`, `auto`, `place` (a Region or scene asked for it), `variety` (a random look) or `feeling`. The hook `sephrals-token-wardrobe.stage` fires on every client when the stage changes, with the stage. The hook `sephrals-token-wardrobe.feeling` fires on every client when a feeling is shown or taken away, with `{actorId, tokenUuid, feeling}`. Every call that takes an actor or a token also takes a UUID or the id or name of a world actor.
+The hook `sephrals-token-wardrobe.added` fires on the client that added an outfit through the api, with `{actor, outfit}`. The hook `sephrals-token-wardrobe.worn` fires on the client that put an outfit on, with `{actor, token, outfit, source}`. `source` is `user`, `auto`, `place` (a Region or scene asked for it), `variety` (a random look) or `feeling`. The hook `sephrals-token-wardrobe.stage` fires on every client when the stage changes, with the stage. The hook `sephrals-token-wardrobe.feeling` fires on every client when a feeling is shown or taken away, with `{actorId, tokenUuid, feeling}`. Every call that takes an actor or a token also takes a UUID or the id or name of a world actor.
 
 ```js
 const api = game.modules.get("sephrals-token-wardrobe").api;
@@ -282,13 +285,13 @@ await api.feel(game.user.character, "worried");
 
 ## Usage statistics
 
-The module can take part in a small usage report shared by all of Sephral’s modules. Nothing is counted or sent until the GM agrees: shortly after the world starts, the active GM is asked, and the question comes back at every start until there is an answer. The answer counts for all of Sephral’s modules in the world. *Share usage statistics* in the module settings turns the report on or off at any time, and *Manage statistics* below it shows what the report contains right now.
+The module can take part in a small usage report shared by all of Sephral’s modules. Nothing is counted or sent until the GM agrees: shortly after the world starts, the active GM is asked, and the question comes back at every start until there is an answer. The answer counts for all of Sephral's modules in the world. *Share usage statistics* in the module settings turns the report on or off at any time, and *Manage statistics* below it shows what the report contains right now.
 
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Token Wardrobe it holds:
 
 * on how many of the last 30 days the module was used
 * how often outfits are put on (in total, through the token HUD, through a key and by the automation), how often the sheet palette and the window are opened, how often portraits are brought onto the stage and expressions changed, how often a Region or scene puts an outfit on, and how often outfits are added, uploaded, copied, imported from a folder, found as variants or taken from wildcard images, how often the quick start and the automation dialog are used, how often random looks are set, given to new tokens and rolled again, how often backdrops are added, shown and adjusted (time of day, panning), how often portraits are placed or moved back, how often feelings are shown and put an outfit on, and how often items are linked to outfits and put an outfit on by being equipped
-* the settings *Look*, *Button on the sheet portrait*, *Button in the token HUD*, *Players put outfits on*, *Players manage the wardrobe*, *Linked tokens on all scenes*, *Change of the token image*, *Automatic outfits* the settings of the conversation stage and the settings *Backdrop sounds*, *Players show feelings* and *How long a feeling lasts* (only the chosen option)
+* the settings *Look*, *Button on the sheet portrait*, *Button in the token HUD*, *Players put outfits on*, *Players manage the wardrobe*, *Linked tokens on all scenes*, *Change of the token image*, *Automatic outfits*, the settings of the conversation stage and the settings *Backdrop sounds*, *Players show feelings* and *How long a feeling lasts* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, notes, pictures or other content of the world are sent.
