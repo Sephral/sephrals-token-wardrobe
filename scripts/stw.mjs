@@ -18,6 +18,7 @@ import {onActorContextOptions, onRenderActorSheet, onSheetHeaderButtons, onSheet
 import {openStageControls} from "./stage-app.mjs";
 import {addToStage, flipSide, getStage, hideStage, removeFromStage, renderStage, setBackdrop, setDepth, setExpression,
   setPan, setPlace, setSpeaker, setTint, showBackdrop, showStage, stageTarget, startStage, stepBackdrop} from "./stage.mjs";
+import {sampleWindows} from "./sample-windows.mjs";
 import {registerUsage} from "./usage.mjs";
 import {startTranslatorRefresh} from "./translator-refresh.mjs";
 import {canReroll, getVariety, onPreCreateToken, rerollLook, saveVariety} from "./variety.mjs";
@@ -180,6 +181,8 @@ Hooks.once("init", () => {
     feel: setFeeling,
     /** Check the module (GM). */
     runSelfTest,
+    /** Sample windows with made-up data (nothing is saved), for translators and testers: [{id, label, group, open}]. */
+    samples: () => sampleWindows(),
     /** Save the debug file of Sephral's modules (GM). */
     saveDebugFile: messageId => saveDebugFile(messageId ?? null, {moduleId: MODULE_ID})
   };

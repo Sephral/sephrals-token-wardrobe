@@ -42,27 +42,30 @@ export function thumbHTML(outfit, prefer="portrait") {
  * The content of a palette.
  * @param {Actor|TokenDocument} target
  * @param {object} [options]
- * @param {boolean} [options.reroll=false]    Offer a new random look (token HUD)
+ * @param {boolean|"sample"} [options.reroll=false]    Offer a new random look (token HUD), "sample" offers it without a token
  * @param {"portrait"|"token"} [options.prefer="portrait"]   The big picture of each outfit (token HUD: the token)
+ * @param {object} [options.viewer]           Who the palette is for (the current user; sample windows pass a stand in)
+ * @param {boolean|null} [options.feelings]   Force the row of feelings on or off (sample windows), null = by rights
  * @returns {string}
  */
-export function paletteHTML(target, {reroll = false, prefer = "portrait"} = {}) {
+export function paletteHTML(target, {reroll = false, prefer = "portrait", viewer = game.user, feelings = null} = {}) {
   const resolved = resolveTarget(target);
   if ( !resolved ) return "";
   const {base, actor, token} = resolved;
   const outfits = wearableOutfits(base);
   const current = currentOutfitId(token ?? actor);
-  const wearable = canWear(actor);
-  const editable = canEdit(actor);
+  const wearable = canWear(actor, viewer);
+  const editable = canEdit(actor, viewer);
+  const offered = (feelings === null) ? feelingsOffered(token ?? actor) : feelings;
   const tool = (action, icon, label) => `<button type="button" class="stw-tool" data-stw="${action}"
     data-tooltip="${esc(label)}" aria-label="${esc(label)}"><i class="${icon}" inert></i></button>`;
   const head = `<div class="stw-palette-head"><span class="stw-palette-title">${esc(actor.name)}</span>${
-    (reroll && canReroll(token)) ? tool("reroll", "fa-solid fa-dice", t("STW.Variety.reroll")) : ""}${
-    (game.user.isGM && outfits.length) ? tool("stage", "fa-solid fa-masks-theater", t("STW.Palette.stage")) : ""}${
+    (reroll && ((reroll === "sample") || canReroll(token))) ? tool("reroll", "fa-solid fa-dice", t("STW.Variety.reroll")) : ""}${
+    (viewer.isGM && outfits.length) ? tool("stage", "fa-solid fa-masks-theater", t("STW.Palette.stage")) : ""}${
     (editable || wearable) ? tool("open", "fa-solid fa-shirt", t("STW.Palette.open")) : ""}</div>${
-    feelingsOffered(token ?? actor) ? feelingsRowHTML() : ""}`;
+    offered ? feelingsRowHTML() : ""}`;
   // Whoever may not put on outfits is offered the feelings only
-  if ( !wearable && feelingsOffered(token ?? actor) ) return head;
+  if ( !wearable && offered ) return head;
   if ( !outfits.length ) {
     return `${head}<p class="stw-empty">${esc(t(editable ? "STW.Palette.emptyEdit" : "STW.Palette.empty"))}</p>`;
   }

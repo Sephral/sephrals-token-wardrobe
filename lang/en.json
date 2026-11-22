@@ -428,6 +428,51 @@
       "dropOnCard": "Drop the item on the card of an outfit.",
       "linked": "{item} is linked to {outfit}. The outfit goes on while it is equipped.",
       "known": "{item} is linked to {outfit} already."
+    },
+    "Sample": {
+      "group": {
+        "wardrobe": "Wardrobe",
+        "stage": "Conversation stage",
+        "palette": "Palettes",
+        "places": "Places",
+        "questions": "Questions"
+      },
+      "wardrobeGm": "Wardrobe with outfits (GM)",
+      "wardrobeEmpty": "Wardrobe without outfits",
+      "wardrobeToken": "Wardrobe of a single token",
+      "wardrobePlayer": "Wardrobe as a player sees it",
+      "wardrobeNoFiles": "Wardrobe without file rights",
+      "wardrobeNoUpload": "Wardrobe without upload right",
+      "wardrobeNoBrowse": "Wardrobe without browse right",
+      "stage": "Stage controls with portraits",
+      "stageEmpty": "Stage controls without portraits",
+      "paletteGm": "Outfit palette in the token HUD (GM)",
+      "paletteEmptyGm": "Palette without outfits (GM)",
+      "paletteEmptyPlayer": "Palette without outfits (player)",
+      "scene": "Outfit of a scene",
+      "auto": "Question: when an outfit puts itself on",
+      "variety": "Question: every figure looks different",
+      "suggest": "Question: variants next to the images",
+      "removeOutfit": "Question: remove an outfit",
+      "backdropEdit": "Question: change a backdrop",
+      "backdropRemove": "Question: remove a backdrop",
+      "outfit": {
+        "wounded": "Wounded",
+        "merchant": "Merchant",
+        "priest": "Priest",
+        "traveler": "Traveler",
+        "hooded": "Hooded",
+        "guard": "Guard"
+      },
+      "disguise": {
+        "merchant": "Orrin the merchant",
+        "stranger": "Hooded stranger"
+      },
+      "backdrop": {
+        "church": "Old church",
+        "gate": "City gate",
+        "cave": "Cave mouth"
+      }
     }
   }
 }

@@ -680,14 +680,7 @@ export class WardrobeApp extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async #onVariety() {
     if ( !canEdit(this.actor) ) return;
-    const now = getVariety(this.base);
-    const content = document.createElement("div");
-    content.innerHTML = `<div class="stw-auto-form"><p class="hint">${esc(t("STW.Variety.intro"))}</p>
-      <label class="stw-check">${esc(t("STW.Variety.mode"))}
-        <select name="mode">${VARIETY_MODES.map(mode => `<option value="${mode}" ${(mode === now.mode) ? "selected" : ""}>${
-          esc(t(`STW.Variety.modes.${mode}`))}</option>`).join("")}</select></label>
-      <label class="stw-check"><input type="checkbox" name="mirror" ${now.mirror ? "checked" : ""}> ${esc(t("STW.Variety.mirror"))}</label>
-      <p class="hint">${esc(t("STW.Variety.outro"))}</p></div>`;
+    const content = varietyFormContent(getVariety(this.base));
     const result = await DialogV2.wait({
       window: {title: t("STW.Variety.title", {name: this.base.name}), icon: "fa-solid fa-dice"},
       classes: ["stw-app", "stw-auto-dialog"],
@@ -890,11 +883,27 @@ function statusName(id) {
 }
 
 /**
- * Let the user set the automation of an outfit.
- * @param {import("./outfits.mjs").Outfit} outfit
- * @returns {Promise<import("./outfits.mjs").OutfitAuto|null>}
+ * The form of "Every figure looks different".
+ * @param {import("./variety-logic.mjs").VarietyConfig} now
+ * @returns {HTMLElement}
  */
-async function editAuto(outfit) {
+export function varietyFormContent(now) {
+  const content = document.createElement("div");
+  content.innerHTML = `<div class="stw-auto-form"><p class="hint">${esc(t("STW.Variety.intro"))}</p>
+    <label class="stw-check">${esc(t("STW.Variety.mode"))}
+      <select name="mode">${VARIETY_MODES.map(mode => `<option value="${mode}" ${(mode === now.mode) ? "selected" : ""}>${
+        esc(t(`STW.Variety.modes.${mode}`))}</option>`).join("")}</select></label>
+    <label class="stw-check"><input type="checkbox" name="mirror" ${now.mirror ? "checked" : ""}> ${esc(t("STW.Variety.mirror"))}</label>
+    <p class="hint">${esc(t("STW.Variety.outro"))}</p></div>`;
+  return content;
+}
+
+/**
+ * The form of the automation of an outfit.
+ * @param {import("./outfits.mjs").Outfit} outfit
+ * @returns {HTMLElement}
+ */
+export function autoFormContent(outfit) {
   const auto = normalizeAuto(outfit.auto);
   const effects = CONFIG.statusEffects.filter(e => e.id && !e.hud?.invisible || (e.id && auto.status.includes(e.id)));
   const boxes = effects.map(e => `<label class="stw-status"><input type="checkbox" name="status" value="${esc(e.id)}"
@@ -922,6 +931,17 @@ async function editAuto(outfit) {
     <p class="stw-auto-title">${esc(t("STW.Auto.status"))}</p>
     <div class="stw-status-list">${boxes}</div>
     <p class="hint">${esc(t("STW.Auto.outro"))}</p></div>`;
+  return content;
+}
+
+/**
+ * Let the user set the automation of an outfit.
+ * @param {import("./outfits.mjs").Outfit} outfit
+ * @returns {Promise<import("./outfits.mjs").OutfitAuto|null>}
+ */
+async function editAuto(outfit) {
+  const auto = normalizeAuto(outfit.auto);
+  const content = autoFormContent(outfit);
   const result = await DialogV2.wait({
     window: {title: t("STW.Auto.title", {name: outfit.label}), icon: "fa-solid fa-bolt"},
     classes: ["stw-app", "stw-auto-dialog"],
@@ -985,17 +1005,27 @@ async function findAlternates(actor, existing) {
 }
 
 /**
+ * The list of variants to tick.
+ * @param {string[]} files
+ * @returns {HTMLElement}
+ */
+export function suggestContent(files) {
+  const items = files.map(src => `<label class="stw-suggestion" data-tooltip="${esc(src)}">
+    <input type="checkbox" name="files" value="${esc(src)}" checked>
+    ${mediaHTML(src)}<span>${esc(fileStem(src))}</span></label>`);
+  const content = document.createElement("div");
+  content.innerHTML = `<p class="hint">${esc(t("STW.Suggest.intro"))}</p><div class="stw-suggestions">${items.join("")}</div>`;
+  return content;
+}
+
+/**
  * Let the user tick the variants to add.
  * @param {Actor} actor
  * @param {string[]} files
  * @returns {Promise<string[]>}
  */
 async function pickAlternates(actor, files) {
-  const items = files.map(src => `<label class="stw-suggestion" data-tooltip="${esc(src)}">
-    <input type="checkbox" name="files" value="${esc(src)}" checked>
-    ${mediaHTML(src)}<span>${esc(fileStem(src))}</span></label>`);
-  const content = document.createElement("div");
-  content.innerHTML = `<p class="hint">${esc(t("STW.Suggest.intro"))}</p><div class="stw-suggestions">${items.join("")}</div>`;
+  const content = suggestContent(files);
   const picked = await DialogV2.wait({
     window: {title: t("STW.Suggest.title", {name: actor.name}), icon: "fa-solid fa-wand-magic-sparkles"},
     classes: ["stw-app", "stw-suggest"],

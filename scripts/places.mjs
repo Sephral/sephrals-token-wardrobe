@@ -165,17 +165,11 @@ async function undressScene(scene) {
 }
 
 /**
- * Hook "renderSceneConfig": a field for the outfit of the scene in the first tab.
- * @param {ApplicationV2} app
- * @param {HTMLElement} html
+ * The field group of the scene configuration: the outfit of the scene and what happens when it is left.
+ * @param {{name: string, leave: "keep"|"restore"}} rule
+ * @returns {HTMLFieldSetElement}
  */
-export function onRenderSceneConfig(app, html) {
-  const element = (html instanceof HTMLElement) ? html : html?.[0];
-  const tab = element?.querySelector('.tab[data-tab="basics"]');
-  if ( !tab || tab.querySelector(".stw-scene-outfit") ) return;
-  const scene = app.document;
-  const name = sceneOutfitName(scene.getFlag(MODULE_ID, "sceneOutfit"));
-  const leave = scene.getFlag(MODULE_ID, "sceneLeave") === "restore" ? "restore" : "keep";
+export function sceneOutfitGroup({name, leave}) {
   const group = document.createElement("fieldset");
   group.className = "stw-scene-outfit";
   group.innerHTML = `<legend>${esc(t("STW.Scene.title"))}</legend>
@@ -193,6 +187,22 @@ export function onRenderSceneConfig(app, html) {
       </select></div>
       <p class="hint">${esc(t("STW.Scene.leaveHint"))}</p>
     </div>`;
+  return group;
+}
+
+/**
+ * Hook "renderSceneConfig": a field for the outfit of the scene in the first tab.
+ * @param {ApplicationV2} app
+ * @param {HTMLElement} html
+ */
+export function onRenderSceneConfig(app, html) {
+  const element = (html instanceof HTMLElement) ? html : html?.[0];
+  const tab = element?.querySelector('.tab[data-tab="basics"]');
+  if ( !tab || tab.querySelector(".stw-scene-outfit") ) return;
+  const scene = app.document;
+  const name = sceneOutfitName(scene.getFlag(MODULE_ID, "sceneOutfit"));
+  const leave = scene.getFlag(MODULE_ID, "sceneLeave") === "restore" ? "restore" : "keep";
+  const group = sceneOutfitGroup({name, leave});
   tab.append(group);
 }
 

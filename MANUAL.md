@@ -249,6 +249,7 @@ The first button in the module settings, *Sephral’s Modules* (GMs only), opens
 | `feel(target, feeling)` | Shows a feeling (`happy`, `angry`, `worried`, `sad`, `surprised`, `thoughtful` or a number from 1) for an actor or a token, `null` takes it away. Returns `{feeling, outfit}` or `null`. |
 | `stage.open()` | Opens the stage controls (GM). |
 | `stage.state()` | A copy of the stage as it is now. |
+| `samples()` | The sample windows: the wardrobe, the stage controls, the palettes, the scene field and the questions filled with made-up characters, as a list of `{id, label, group, open}`. Nothing is saved, buttons that would change something do nothing. For translators and testers. |
 | `runSelfTest()` | Runs the self test (GM). |
 | `saveDebugFile()` | Saves the debug file (GM). |
 

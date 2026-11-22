@@ -428,6 +428,51 @@
       "dropOnCard": "Zieh den Gegenstand auf die Karte eines Outfits.",
       "linked": "{item} ist mit {outfit} verknüpft. Das Outfit wird angezogen, solange der Gegenstand angelegt ist.",
       "known": "{item} ist schon mit {outfit} verknüpft."
+    },
+    "Sample": {
+      "group": {
+        "wardrobe": "Kleiderschrank",
+        "stage": "Gesprächsbühne",
+        "palette": "Paletten",
+        "places": "Orte",
+        "questions": "Rückfragen"
+      },
+      "wardrobeGm": "Kleiderschrank mit Outfits (SL)",
+      "wardrobeEmpty": "Kleiderschrank ohne Outfits",
+      "wardrobeToken": "Kleiderschrank eines einzelnen Tokens",
+      "wardrobePlayer": "Kleiderschrank aus Spielersicht",
+      "wardrobeNoFiles": "Kleiderschrank ohne Dateirechte",
+      "wardrobeNoUpload": "Kleiderschrank ohne Hochladerecht",
+      "wardrobeNoBrowse": "Kleiderschrank ohne Browserecht",
+      "stage": "Bühnensteuerung mit Porträts",
+      "stageEmpty": "Bühnensteuerung ohne Porträts",
+      "paletteGm": "Outfit-Palette im Token-HUD (SL)",
+      "paletteEmptyGm": "Palette ohne Outfits (SL)",
+      "paletteEmptyPlayer": "Palette ohne Outfits (Spieler)",
+      "scene": "Outfit einer Szene",
+      "auto": "Frage: Wann sich ein Outfit selbst anzieht",
+      "variety": "Frage: Jede Figur sieht anders aus",
+      "suggest": "Frage: Varianten neben den Bildern",
+      "removeOutfit": "Frage: Outfit entfernen",
+      "backdropEdit": "Frage: Kulisse ändern",
+      "backdropRemove": "Frage: Kulisse entfernen",
+      "outfit": {
+        "wounded": "Verwundet",
+        "merchant": "Händler",
+        "priest": "Priester",
+        "traveler": "Reisender",
+        "hooded": "Mit Kapuze",
+        "guard": "Wache"
+      },
+      "disguise": {
+        "merchant": "Orrin der Händler",
+        "stranger": "Verhüllter Fremder"
+      },
+      "backdrop": {
+        "church": "Alte Kirche",
+        "gate": "Stadttor",
+        "cave": "Höhleneingang"
+      }
     }
   }
 }

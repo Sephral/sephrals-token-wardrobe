@@ -28,6 +28,22 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** The portrait the keys act on. */
   selected = null;
 
+  /**
+   * What the window shows and from where: the stage, the outfits of a portrait, the actors to add, the backdrops
+   * and whether tokens are selected. Sample windows hand over made-up data instead.
+   * @returns {{state: object, target: Function, outfits: Function, actors: Function, backdrops: Function, hasTokens: Function}}
+   */
+  get source() {
+    return {
+      state: getStage,
+      target: slotTarget,
+      outfits: slotOutfits,
+      actors: () => game.actors.contents,
+      backdrops: getBackdrops,
+      hasTokens: () => !!canvas?.tokens?.controlled?.some(token => token.actor)
+    };
+  }
+
   /** @inheritDoc */
   static DEFAULT_OPTIONS = {
     id: APP_ID,
@@ -66,12 +82,13 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** @override */
   async _prepareContext() {
-    const state = getStage();
+    const source = this.source;
+    const state = source.state();
     if ( !state.slots.some(s => s.id === this.selected) ) this.selected = state.slots[0]?.id ?? null;
     const layout = new Map(layoutStage(state.slots).map(l => [l.id, l]));
     const slots = state.slots.map(slot => {
-      const target = slotTarget(slot);
-      const outfits = slotOutfits(slot);
+      const target = source.target(slot);
+      const outfits = source.outfits(slot);
       const real = target?.base.name ?? "";
       return {
         ...slot,
@@ -100,7 +117,7 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
       };
     });
     const onStage = new Set(state.slots.map(s => s.actorId));
-    const actors = game.actors.contents.filter(a => !onStage.has(a.id) && (usableOutfits(getOutfits(a)).length || a.img))
+    const actors = source.actors().filter(a => !onStage.has(a.id) && (usableOutfits(getOutfits(a)).length || a.img))
       .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
     const withOutfits = actors.filter(a => usableOutfits(getOutfits(a)).length).map(a => ({id: a.id, name: a.name}));
     const others = actors.filter(a => !usableOutfits(getOutfits(a)).length).map(a => ({id: a.id, name: a.name}));
@@ -112,12 +129,12 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
       subtitle: state.active ? t("STW.Stage.onStage", {count: slots.length}) : t("STW.Stage.offStage"),
       withOutfits,
       others,
-      hasTokens: !!canvas?.tokens?.controlled?.some(token => token.actor),
+      hasTokens: source.hasTokens(),
       shadings: BACKDROPS.map(value => ({value, label: t(`STW.Stage.backdrop.${value}`), selected: value === state.backdrop})),
       hasBackdrop: !!state.backdropId,
       pan: state.pan,
       tints: TINTS.map(value => ({value, label: t(`STW.Backdrop.tints.${value}`), selected: value === state.tint})),
-      backdrops: getBackdrops().map((backdrop, index) => ({
+      backdrops: source.backdrops().map((backdrop, index) => ({
         ...backdrop,
         active: backdrop.id === state.backdropId,
         thumb: mediaHTML(backdrop.img),
@@ -448,11 +465,11 @@ export class StageApp extends HandlebarsApplicationMixin(ApplicationV2) {
 /* -------------------------------------------- */
 
 /**
- * Let the GM change a backdrop: name, picture, sound, playlist, time of day and panning.
+ * The form of a backdrop.
  * @param {import("./backdrop-logic.mjs").Backdrop} backdrop
- * @returns {Promise<object|null>}
+ * @returns {HTMLElement}
  */
-async function editBackdrop(backdrop) {
+export function backdropFormContent(backdrop) {
   const playlists = game.playlists.contents.slice().sort((a, b) => a.name.localeCompare(b.name));
   const options = [`<option value="">${esc(t("STW.Backdrop.noPlaylist"))}</option>`,
     ...playlists.map(p => `<option value="${esc(p.uuid)}" ${(p.uuid === backdrop.playlist) ? "selected" : ""}>${esc(p.name)}</option>`)].join("");
@@ -466,6 +483,16 @@ async function editBackdrop(backdrop) {
     <label class="stw-check">${esc(t("STW.Backdrop.tint"))} <select name="tint">${tints}</select></label>
     <label class="stw-check"><input type="checkbox" name="pan" ${backdrop.pan ? "checked" : ""}> ${esc(t("STW.Backdrop.pan"))}</label>
     <p class="hint">${esc(t("STW.Backdrop.editHint"))}</p></div>`;
+  return content;
+}
+
+/**
+ * Let the GM change a backdrop: name, picture, sound, playlist, time of day and panning.
+ * @param {import("./backdrop-logic.mjs").Backdrop} backdrop
+ * @returns {Promise<object|null>}
+ */
+async function editBackdrop(backdrop) {
+  const content = backdropFormContent(backdrop);
   const result = await DialogV2.wait({
     window: {title: t("STW.Backdrop.editTitle", {name: backdrop.name}), icon: "fa-solid fa-image"},
     classes: ["stw-app", "stw-auto-dialog"],
